@@ -2,26 +2,42 @@ const BASE_URL = "https://vbank.open.bankingapi.ru/"
 let TOKEN = ""
 let CONSENT_ID = ""
 
-function doHTTP(url, headers, body, params) {
-    url = url+"?"+new URLSearchParams(params).toString()
-    // console.log(url)
-    // fetch(url, {headers: headers, body:JSON.stringify(body)}).then(function(response) {
-    //     console.log(response.json())
-    //     return response.json()
-    // }).then(function(data) {
-    //     console.log(data)
-    //     return data;
-    // }).catch(function(err) {
-    //     return {"err": true, "data": err}
-    // })
-    var http = new XMLHttpRequest();
-    http.open("GET", url, false);
-    http.setRequestHeader("Access-Control-Allow-Origin", "*");
-    http.setRequestHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, DELETE, PUT");
-    http.setRequestHeader("Access-Control-Allow-Headers", "Content-Type");
-    for (const header in headers) {
-        http.setRequestHeader(header, headers[header])
+async function doHTTP(url, headers = {}, body = null, params = {}) {
+    const hasParams = params && Object.keys(params).length > 0
+    if (hasParams) {
+        const query = new URLSearchParams(params).toString()
+        url = url + (url.includes("?") ? "&" : "?") + query
     }
-    http.send(body);
-    return http.responseText;
+
+    // IMPORTANT: Do not send Access-Control-* headers from the browser.
+    // These are response headers that must come from the server.
+    const sanitizedHeaders = {}
+    for (const key in headers) {
+        const lower = key.toLowerCase()
+        if (lower.startsWith("access-control-")) continue
+        sanitizedHeaders[key] = headers[key]
+    }
+
+    const isPostLike = body !== null && body !== undefined
+    const fetchInit = {
+        method: isPostLike ? "POST" : "GET",
+        headers: sanitizedHeaders,
+        // Avoid setting Content-Type automatically for GET requests
+        body: isPostLike ? (typeof body === "string" ? body : JSON.stringify(body)) : undefined,
+        // Let the browser handle CORS; server must return proper headers
+        mode: "cors",
+        credentials: "omit"
+    }
+
+    const response = await fetch(url, fetchInit)
+    const contentType = response.headers.get("content-type") || ""
+    if (!response.ok) {
+        // Try to extract error body to aid debugging
+        const errorBody = await response.text().catch(() => "")
+        throw new Error(`HTTP ${response.status} ${response.statusText}: ${errorBody}`)
+    }
+    if (contentType.includes("application/json")) {
+        return await response.json()
+    }
+    return await response.text()
 }
