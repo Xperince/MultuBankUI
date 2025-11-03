@@ -1,3 +1,5 @@
+
+
 // Переключение видимости пароля
 function setupPasswordToggle(toggleId, inputId) {
     const toggle = document.getElementById(toggleId);
@@ -39,12 +41,14 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
     button.querySelector('.button-text').textContent = 'Вход...';
     button.disabled = true;
 
-    setTimeout(() => {
-        button.querySelector('.button-text').textContent = originalText;
-        button.disabled = false;
-        // Переход на главную страницу после авторизации
-        window.location.href = 'dashboard.html';
-    }, 1500);
+    console.log(doHTTP(BASE_URL+"auth/bank-token", {}, {}, {"client_id": "team211", "client_secret": "SZo2288LCcakox5G1xHEZRgSlE78Prbv"}))
+
+    // setTimeout(() => {
+    //     button.querySelector('.button-text').textContent = originalText;
+    //     button.disabled = false;
+    //     // Переход на главную страницу после авторизации
+    //     window.location.href = 'dashboard.html';
+    // }, 1500);
 });
 
 // Плавная анимация появления полей при фокусе
