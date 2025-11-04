@@ -1,17 +1,26 @@
 const VBANK = "https://vbank.open.bankingapi.ru/"
 const ABANK = "https://abank.open.bankingapi.ru/"
+const SBANK = "https://sbank.open.bankingapi.ru/"
 let VTOKEN = ""
 let ATOKEN = ""
 let STOKEN = ""
 let VBANK_CONSENT_ID = ""
 let ABANK_CONSENT_ID = ""
 let SBANK_CONSENT_ID = ""
+let VBANK_PCONSENT_ID = ""
+let ABANK_PCONSENT_ID = ""
+let SBANK_PCONSENT_ID = ""
 let USERNAME = ""
 
 let ACCOUNTS = {
     "vbank": {total_balance: 0, accounts: []},
     "abank": {total_balance: 0, accounts: []},
     "sbank": {total_balance: 0, accounts: []}
+}
+let PRODUCTS = {
+    "vbank": [],
+    "abank": [],
+    "sbank": []
 }
 
 async function doHTTP(url, headers = {}, body = null, params = {}) {

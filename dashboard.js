@@ -207,13 +207,34 @@ document.querySelectorAll('.close-button').forEach(button => {
 });
 
 async function auth(uname, passw) {
+    console.log("auth")
     let vauth = await doHTTP(VBANK + "auth/bank-token", {}, {}, { "client_id": "team211", "client_secret": passw })
     let aauth = await doHTTP(ABANK + "auth/bank-token", {}, {}, { "client_id": "team211", "client_secret": passw })
-    if ("access_token" in vauth && "access_token" in aauth) {
+    let sauth = await doHTTP(SBANK+  "auth/bank-token", {}, {}, { "client_id": "team211", "client_secret": passw })
+    if ("access_token" in vauth && "access_token" in aauth && "access_token" in sauth) {
         VTOKEN = "Bearer " + vauth["access_token"]
         ATOKEN = "Bearer " + aauth["access_token"]
+        STOKEN = "Bearer " + sauth["access_token"]
         let vconsent = localStorage.getItem("vconsent")
         let aconsent = localStorage.getItem("aconsent")
+        let sconsent = localStorage.getItem("sconsent")
+        if (sconsent == null) {
+            sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": uname, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
+            console.log(sconsent)
+            SBANK_CONSENT_ID = sconsent['request_id']
+        } else SBANK_CONSENT_ID = sconsent
+        localStorage.setItem("sconsent", SBANK_CONSENT_ID)
+        let check = await doHTTP(SBANK+"account-consents/"+SBANK_CONSENT_ID, {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, null, {})
+        if (SBANK_CONSENT_ID.search("req") != -1) {
+           
+            console.log(check['data']["status"])
+            if (check['data']['status'] == "Authorized") {
+                
+                SBANK_CONSENT_ID = check['data']['consentId']
+                localStorage.setItem("sconsent", SBANK_CONSENT_ID)
+            } else
+                alert("Подтвердите доступ к Smart Bank через его приложение")
+        }
         if (vconsent == null || aconsent == null) {
             await getConsent(uname, passw)
         } else {
@@ -230,7 +251,7 @@ async function auth(uname, passw) {
 
 async function getConsent(uname, passw) {
     let vconsent = await doHTTP(VBANK + "account-consents/request", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211" }, { "client_id": uname, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211" }, {})
-    let aconsent = await doHTTP(ABANK + "account-consents/request", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211" }, { "client_id": uname, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "...", "requesting_bank": "team211", "requesting_bank_name": "Team 211 App" }, {})
+    let aconsent = await doHTTP(ABANK + "account-consents/request", { "Authorization": ATOKEN, "X-Requesting-Bank": "team211" }, { "client_id": uname, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "...", "requesting_bank": "team211", "requesting_bank_name": "Team 211 App" }, {})
     if ("detail" in vconsent && "detail" in aconsent) {
         return window.location.href = "/index.html"
     }
@@ -244,19 +265,76 @@ async function getConsent(uname, passw) {
     window.location.href = "/dashboard.html"
 }
 
+async function getProductConsents() {
+    if (VBANK_PCONSENT_ID == "" || VBANK_PCONSENT_ID == null) {
+        let vconsent = await doHTTP(VBANK+"product-agreement-consents/request", {"Authorization": VTOKEN}, {"requesting_bank": "team211","client_id": USERNAME,"read_product_agreements": true,"open_product_agreements": true,"close_product_agreements": false,"allowed_product_types": ["deposit", "card"],"max_amount": 9999999999.99,}, {"client_id": USERNAME})
+        console.log(vconsent)
+        VBANK_PCONSENT_ID = vconsent['consent_id']
+        localStorage.setItem("vpconsent", VBANK_PCONSENT_ID)
+    }
+    if (ABANK_PCONSENT_ID == "" || ABANK_PCONSENT_ID == null) {
+        let aconsent = await doHTTP(ABANK+"product-agreement-consents/request", {"Authorization": ATOKEN}, {"requesting_bank": "team211","client_id": USERNAME,"read_product_agreements": true,"open_product_agreements": true,"close_product_agreements": false,"allowed_product_types": ["deposit", "card"],"max_amount": 9999999999.99,}, {"client_id": USERNAME})
+        ABANK_PCONSENT_ID = aconsent['consent_id']
+        localStorage.setItem("apconsent", ABANK_PCONSENT_ID)
+    }
+    if (SBANK_CONSENT_ID.search("consent") != -1) {
+        if (SBANK_PCONSENT_ID == "" || SBANK_PCONSENT_ID == null) {
+            let sconsent = await doHTTP(SBANK+"product-agreement-consents/request", {"Authorization": STOKEN}, {"requesting_bank": "team211","client_id": USERNAME,"read_product_agreements": true,"open_product_agreements": true,"close_product_agreements": false,"allowed_product_types": ["deposit", "card"],"max_amount": 9999999999.99,}, {"client_id": USERNAME})
+            SBANK_PCONSENT_ID = sconsent['consent_id']
+            localStorage.setItem("spconsent", SBANK_PCONSENT_ID)
+        } 
+    }
+}
+
 window.onload = async function () {
     if (localStorage.getItem("uname") == null || localStorage.getItem("password") == null) {
         return window.location.href = "/index.html"
     }
-    if (VTOKEN in [null, undefined] || ATOKEN in [null, undefined]) {
+    if (VTOKEN == "" || ATOKEN == "" || STOKEN == "") {
         await auth(localStorage.getItem("uname"), localStorage.getItem("password"))
     }
     USERNAME = localStorage.getItem("uname")
     VBANK_CONSENT_ID = localStorage.getItem("vconsent")
     ABANK_CONSENT_ID = localStorage.getItem("aconsent")
+    SBANK_CONSENT_ID = localStorage.getItem("sconsent")
+    VBANK_PCONSENT_ID = localStorage.getItem("vpconsent")
+    ABANK_PCONSENT_ID = localStorage.getItem("apconsent")
+    SBANK_PCONSENT_ID = localStorage.getItem("spconsent")
+    let check = await doHTTP(SBANK+"account-consents/"+SBANK_CONSENT_ID, {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, null, {})
+    if ("detail" in check) {
+        localStorage.removeItem("sconsent")
+        SBANK_CONSENT_ID = ""
+        sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
+        SBANK_CONSENT_ID = sconsent['request_id']
+        alert("Подтвердите доступ к Smart Bank через его приложение")
+    } else {
+        if (check['data']['status'] == 'Revoked') {
+        localStorage.removeItem("sconsent")
+        SBANK_CONSENT_ID = ""
+        sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
+        SBANK_CONSENT_ID = sconsent['request_id']
+        alert("Подтвердите доступ к Smart Bank через его приложение")
+    }
+    }
+    
     document.getElementById("greeting").innerHTML = "Добрый день, " + USERNAME
+    getProductConsents()
     let vaccounts = await doHTTP(VBANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": VBANK_CONSENT_ID }, null, { "client_id": USERNAME })
     let aaccounts = await doHTTP(ABANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": ABANK_CONSENT_ID }, null, { "client_id": USERNAME })
+    if (SBANK_CONSENT_ID.search("consent") != -1) {
+        let saccounts = await doHTTP(SBANK + "accounts", { "Authorization": STOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": SBANK_CONSENT_ID }, null, { "client_id": USERNAME })
+        if (!("detail" in saccounts)) {
+            saccounts = saccounts["data"]["account"]
+            const sbankPromises = saccounts.map(async (acc) => {
+                let balance = await doHTTP(SBANK + "accounts/" + acc["accountId"] + "/balances", { "Authorization": STOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": SBANK_CONSENT_ID }, null, { "client_id": USERNAME })
+                console.log(balance)
+                balance = parseFloat(balance['data']['balance'][0]['amount']['amount'])
+                ACCOUNTS['sbank']['total_balance'] += balance
+                ACCOUNTS['sbank']["accounts"].push({ acc: acc['accountId'], balance: balance, accId: acc['account'][0]['identification'], type: (acc['accountSubType'] == 'Checking' ? 'Расчётный' : 'Накопительный') })
+            })
+            await Promise.all(sbankPromises)
+        }
+    }
     if (!("detail" in vaccounts)) {
         vaccounts = vaccounts["data"]["account"]
         const vbankPromises = vaccounts.map(async (acc) => {
@@ -288,6 +366,7 @@ window.onload = async function () {
     renderAccounts()
 
     // Отрисовываем продукты
+    await getProducts()
     renderProducts()
 
     // Обновляем количество счетов
@@ -360,57 +439,57 @@ function renderAccounts() {
     })
 
     // Если счетов нет, добавляем заглушки
-    if (allAccounts.length === 0) {
-        // Заглушка 1
-        const placeholder1 = document.createElement('div')
-        placeholder1.className = 'account-item'
-        placeholder1.innerHTML = `
-            <div class="account-header">
-                <div class="account-bank">VBank</div>
-                <div class="account-type">Расчетный счет</div>
-            </div>
-            <div class="account-info">
-                <div class="account-id-label">Номер счета</div>
-                <div class="account-id-wrapper">
-                    <div class="account-id">40817810099910004321</div>
-                    <button class="copy-account-btn" data-account="40817810099910004321" title="Скопировать номер счета">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M10.6667 10.6667H13.3333C13.7015 10.6667 14 10.3682 14 10V3.33333C14 2.96515 13.7015 2.66667 13.3333 2.66667H6.66667C6.29848 2.66667 6 2.96515 6 3.33333V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M10 6H4C3.44772 6 3 6.44772 3 7V13C3 13.5523 3.44772 14 4 14H10C10.5523 14 11 13.5523 11 13V7C11 6.44772 10.5523 6 10 6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="account-balance-label">Баланс</div>
-                <div class="account-balance">50 000,00 Р</div>
-            </div>
-        `
-        accountsContainer.appendChild(placeholder1)
+    // if (allAccounts.length === 0) {
+    //     // Заглушка 1
+    //     const placeholder1 = document.createElement('div')
+    //     placeholder1.className = 'account-item'
+    //     placeholder1.innerHTML = `
+    //         <div class="account-header">
+    //             <div class="account-bank">VBank</div>
+    //             <div class="account-type">Расчетный счет</div>
+    //         </div>
+    //         <div class="account-info">
+    //             <div class="account-id-label">Номер счета</div>
+    //             <div class="account-id-wrapper">
+    //                 <div class="account-id">40817810099910004321</div>
+    //                 <button class="copy-account-btn" data-account="40817810099910004321" title="Скопировать номер счета">
+    //                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //                         <path d="M10.6667 10.6667H13.3333C13.7015 10.6667 14 10.3682 14 10V3.33333C14 2.96515 13.7015 2.66667 13.3333 2.66667H6.66667C6.29848 2.66667 6 2.96515 6 3.33333V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    //                         <path d="M10 6H4C3.44772 6 3 6.44772 3 7V13C3 13.5523 3.44772 14 4 14H10C10.5523 14 11 13.5523 11 13V7C11 6.44772 10.5523 6 10 6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    //                     </svg>
+    //                 </button>
+    //             </div>
+    //             <div class="account-balance-label">Баланс</div>
+    //             <div class="account-balance">50 000,00 Р</div>
+    //         </div>
+    //     `
+    //     accountsContainer.appendChild(placeholder1)
 
-        // Заглушка 2
-        const placeholder2 = document.createElement('div')
-        placeholder2.className = 'account-item'
-        placeholder2.innerHTML = `
-            <div class="account-header">
-                <div class="account-bank">ABank</div>
-                <div class="account-type">Накопительный счет</div>
-            </div>
-            <div class="account-info">
-                <div class="account-id-label">Номер счета</div>
-                <div class="account-id-wrapper">
-                    <div class="account-id">40817810099910004322</div>
-                    <button class="copy-account-btn" data-account="40817810099910004322" title="Скопировать номер счета">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M10.6667 10.6667H13.3333C13.7015 10.6667 14 10.3682 14 10V3.33333C14 2.96515 13.7015 2.66667 13.3333 2.66667H6.66667C6.29848 2.66667 6 2.96515 6 3.33333V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M10 6H4C3.44772 6 3 6.44772 3 7V13C3 13.5523 3.44772 14 4 14H10C10.5523 14 11 13.5523 11 13V7C11 6.44772 10.5523 6 10 6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="account-balance-label">Баланс</div>
-                <div class="account-balance">75 500,50 Р</div>
-            </div>
-        `
-        accountsContainer.appendChild(placeholder2)
-    }
+    //     // Заглушка 2
+    //     const placeholder2 = document.createElement('div')
+    //     placeholder2.className = 'account-item'
+    //     placeholder2.innerHTML = `
+    //         <div class="account-header">
+    //             <div class="account-bank">ABank</div>
+    //             <div class="account-type">Накопительный счет</div>
+    //         </div>
+    //         <div class="account-info">
+    //             <div class="account-id-label">Номер счета</div>
+    //             <div class="account-id-wrapper">
+    //                 <div class="account-id">40817810099910004322</div>
+    //                 <button class="copy-account-btn" data-account="40817810099910004322" title="Скопировать номер счета">
+    //                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    //                         <path d="M10.6667 10.6667H13.3333C13.7015 10.6667 14 10.3682 14 10V3.33333C14 2.96515 13.7015 2.66667 13.3333 2.66667H6.66667C6.29848 2.66667 6 2.96515 6 3.33333V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    //                         <path d="M10 6H4C3.44772 6 3 6.44772 3 7V13C3 13.5523 3.44772 14 4 14H10C10.5523 14 11 13.5523 11 13V7C11 6.44772 10.5523 6 10 6Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    //                     </svg>
+    //                 </button>
+    //             </div>
+    //             <div class="account-balance-label">Баланс</div>
+    //             <div class="account-balance">75 500,50 Р</div>
+    //         </div>
+    //     `
+    //     accountsContainer.appendChild(placeholder2)
+    // }
 
     // Добавляем обработчики для кнопок копирования (включая заглушки)
     document.querySelectorAll('.copy-account-btn').forEach(btn => {
@@ -443,59 +522,182 @@ function renderAccounts() {
     });
 }
 
+async function getProducts() {
+    if (VBANK_PCONSENT_ID != null && VBANK_PCONSENT_ID != "") {
+        let products = await doHTTP(VBANK+"product-agreements", {"Authorization": VTOKEN, "X-Product-Agreement-Consent-Id": VBANK_PCONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"client_id": USERNAME})
+        PRODUCTS['vbank'].push(...products['data'])
+    }
+    if (ABANK_PCONSENT_ID != null && ABANK_PCONSENT_ID != "") {
+        let products = await doHTTP(ABANK+"product-agreements", {"Authorization": ATOKEN, "X-Product-Agreement-Consent-Id": ABANK_PCONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"client_id": USERNAME})
+        PRODUCTS['abank'].push(...products['data'])
+    }
+    if (SBANK_CONSENT_ID.search("consent") != -1) {
+        if (SBANK_PCONSENT_ID != null && SBANK_PCONSENT_ID != "") {
+            let products = await doHTTP(SBANK+"product-agreements", {"Authorization": STOKEN, "X-Product-Agreement-Consent-Id": SBANK_PCONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"client_id": USERNAME})
+            PRODUCTS['sbank'].push(...products['data'])
+        }
+    }
+
+}
+
 // Функция для отрисовки продуктов
 function renderProducts() {
     const productsContainer = document.getElementById('productsContainer')
     productsContainer.innerHTML = '' // Очищаем контейнер
+    PRODUCTS.vbank.forEach((elem, index) => {
+        console.log(elem)
+        let expDay = elem['end_date']
+        if (expDay == null) expDay = "Бессрочен"
+        let percent = ""
+        if ("interestRate" in elem) {
+            percent = elem['interestRate']
+        }
+        const placeholder1 = document.createElement('div')
+        placeholder1.className = 'product-item'
+        placeholder1.innerHTML = `
+            <div class="product-header">
+                <div class="product-name">VBank | ${elem['product_name']}</div>
+                <div class="product-status">Активен</div>
+            </div>
+            <div class="product-info">
+                <div class="product-detail-row">
+                    <span class="product-detail-label">Сумма:</span>
+                    <span class="product-detail-value">${elem['amount']} ₽</span>
+                </div>
+                <div class="product-detail-row">
+                    <span class="product-detail-label">Срок:</span>
+                    <span class="product-detail-value">${expDay}</span>
+                </div>
+        `
+        if (percent != "") {
+           placeholder1.innerHTML += `<div class="product-detail-row">
+                        <span class="product-detail-label">Процентная ставка:</span>
+                        <span class="product-detail-value">${percent}%</span>
+                    </div>
+            ` 
+        }
+        placeholder1.innerHTML += "</div>"
+        productsContainer.appendChild(placeholder1)
+    })
+    PRODUCTS.abank.forEach((elem, index) => {
+        console.log(elem)
+        let expDay = elem['end_date']
+        if (expDay == null) expDay = "Бессрочен"
+        let percent = ""
+        if ("interestRate" in elem) {
+            percent = elem['interestRate']
+        }
+        const placeholder1 = document.createElement('div')
+        placeholder1.className = 'product-item'
+        placeholder1.innerHTML = `
+            <div class="product-header">
+                <div class="product-name">ABank | ${elem['product_name']}</div>
+                <div class="product-status">Активен</div>
+            </div>
+            <div class="product-info">
+                <div class="product-detail-row">
+                    <span class="product-detail-label">Сумма:</span>
+                    <span class="product-detail-value">${elem['amount']} ₽</span>
+                </div>
+                <div class="product-detail-row">
+                    <span class="product-detail-label">Срок:</span>
+                    <span class="product-detail-value">${expDay}</span>
+                </div>
+        `
+        if (percent != "") {
+           placeholder1.innerHTML += `<div class="product-detail-row">
+                        <span class="product-detail-label">Процентная ставка:</span>
+                        <span class="product-detail-value">${percent}%</span>
+                    </div>
+            ` 
+        }
+        placeholder1.innerHTML += "</div>"
+        productsContainer.appendChild(placeholder1)
+    })
+    PRODUCTS.sbank.forEach((elem, index) => {
+        console.log(elem)
+        let expDay = elem['end_date']
+        if (expDay == null) expDay = "Бессрочен"
+        let percent = ""
+        if ("interestRate" in elem) {
+            percent = elem['interestRate']
+        }
+        const placeholder1 = document.createElement('div')
+        placeholder1.className = 'product-item'
+        placeholder1.innerHTML = `
+            <div class="product-header">
+                <div class="product-name">SBank | ${elem['product_name']}</div>
+                <div class="product-status">Активен</div>
+            </div>
+            <div class="product-info">
+                <div class="product-detail-row">
+                    <span class="product-detail-label">Сумма:</span>
+                    <span class="product-detail-value">${elem['amount']} ₽</span>
+                </div>
+                <div class="product-detail-row">
+                    <span class="product-detail-label">Срок:</span>
+                    <span class="product-detail-value">${expDay}</span>
+                </div>
+        `
+        if (percent != "") {
+           placeholder1.innerHTML += `<div class="product-detail-row">
+                        <span class="product-detail-label">Процентная ставка:</span>
+                        <span class="product-detail-value">${percent}%</span>
+                    </div>
+            ` 
+        }
+        placeholder1.innerHTML += "</div>"
+        productsContainer.appendChild(placeholder1)
+    })
 
     // Заглушки для продуктов
-    const placeholder1 = document.createElement('div')
-    placeholder1.className = 'product-item'
-    placeholder1.innerHTML = `
-        <div class="product-header">
-            <div class="product-name">Депозит "Накопительный"</div>
-            <div class="product-status">Активен</div>
-        </div>
-        <div class="product-info">
-            <div class="product-detail-row">
-                <span class="product-detail-label">Сумма депозита:</span>
-                <span class="product-detail-value">1 000 000,00 Р</span>
-            </div>
-            <div class="product-detail-row">
-                <span class="product-detail-label">Срок:</span>
-                <span class="product-detail-value">12 месяцев</span>
-            </div>
-            <div class="product-detail-row">
-                <span class="product-detail-label">Процентная ставка:</span>
-                <span class="product-detail-value">7,5% годовых</span>
-            </div>
-        </div>
-    `
-    productsContainer.appendChild(placeholder1)
+    // const placeholder1 = document.createElement('div')
+    // placeholder1.className = 'product-item'
+    // placeholder1.innerHTML = `
+    //     <div class="product-header">
+    //         <div class="product-name">Депозит "Накопительный"</div>
+    //         <div class="product-status">Активен</div>
+    //     </div>
+    //     <div class="product-info">
+    //         <div class="product-detail-row">
+    //             <span class="product-detail-label">Сумма депозита:</span>
+    //             <span class="product-detail-value">1 000 000,00 Р</span>
+    //         </div>
+    //         <div class="product-detail-row">
+    //             <span class="product-detail-label">Срок:</span>
+    //             <span class="product-detail-value">12 месяцев</span>
+    //         </div>
+    //         <div class="product-detail-row">
+    //             <span class="product-detail-label">Процентная ставка:</span>
+    //             <span class="product-detail-value">7,5% годовых</span>
+    //         </div>
+    //     </div>
+    // `
+    // productsContainer.appendChild(placeholder1)
 
-    const placeholder2 = document.createElement('div')
-    placeholder2.className = 'product-item'
-    placeholder2.innerHTML = `
-        <div class="product-header">
-            <div class="product-name">Кредитная карта "Премиум"</div>
-            <div class="product-status">Активна</div>
-        </div>
-        <div class="product-info">
-            <div class="product-detail-row">
-                <span class="product-detail-label">Кредитный лимит:</span>
-                <span class="product-detail-value">500 000,00 Р</span>
-            </div>
-            <div class="product-detail-row">
-                <span class="product-detail-label">Использовано:</span>
-                <span class="product-detail-value">125 000,00 Р</span>
-            </div>
-            <div class="product-detail-row">
-                <span class="product-detail-label">Доступно:</span>
-                <span class="product-detail-value">375 000,00 Р</span>
-            </div>
-        </div>
-    `
-    productsContainer.appendChild(placeholder2)
+    // const placeholder2 = document.createElement('div')
+    // placeholder2.className = 'product-item'
+    // placeholder2.innerHTML = `
+    //     <div class="product-header">
+    //         <div class="product-name">Кредитная карта "Премиум"</div>
+    //         <div class="product-status">Активна</div>
+    //     </div>
+    //     <div class="product-info">
+    //         <div class="product-detail-row">
+    //             <span class="product-detail-label">Кредитный лимит:</span>
+    //             <span class="product-detail-value">500 000,00 Р</span>
+    //         </div>
+    //         <div class="product-detail-row">
+    //             <span class="product-detail-label">Использовано:</span>
+    //             <span class="product-detail-value">125 000,00 Р</span>
+    //         </div>
+    //         <div class="product-detail-row">
+    //             <span class="product-detail-label">Доступно:</span>
+    //             <span class="product-detail-value">375 000,00 Р</span>
+    //         </div>
+    //     </div>
+    // `
+    // productsContainer.appendChild(placeholder2)
 }
 
 // Переменные для хранения экземпляров диаграмм

@@ -23,11 +23,20 @@ async function getConsent(uname, passw) {
 async function auth(uname, passw) {
     let vauth = await doHTTP(VBANK+"auth/bank-token", {}, {}, {"client_id": "team211", "client_secret": passw})
     let aauth = await doHTTP(ABANK+"auth/bank-token", {}, {}, {"client_id": "team211", "client_secret": passw})
-    if ("access_token" in vauth && "access_token" in aauth) {
+    let sauth = await doHTTP(SBANK+"auth/bank-token", {}, {}, {"client_id": "team211", "client_secret": passw})
+    if ("access_token" in vauth && "access_token" in aauth && "access_token" in sauth) {
         VTOKEN = "Bearer " + vauth["access_token"]
         ATOKEN = "Bearer " + aauth["access_token"]
+        STOKEN = "Bearer " + sauth["access_token"]
         let vconsent = localStorage.getItem("vconsent")
         let aconsent = localStorage.getItem("aconsent")
+        let sconsent = localStorage.getItem("sconsent")
+        if (sconsent == null) {
+            sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": uname, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
+            console.log(sconsent)
+            SBANK_CONSENT_ID = sconsent['request_id']
+        }
+        localStorage.setItem("sconsent", SBANK_CONSENT_ID)
         if (vconsent == null || aconsent == null) {
             await getConsent(uname, passw)
         } else {
