@@ -254,6 +254,7 @@ window.onload = async function () {
     USERNAME = localStorage.getItem("uname")
     VBANK_CONSENT_ID = localStorage.getItem("vconsent")
     ABANK_CONSENT_ID = localStorage.getItem("aconsent")
+    document.getElementById("greeting").innerHTML = "Добрый день, " + USERNAME
     let vaccounts = await doHTTP(VBANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": VBANK_CONSENT_ID }, null, { "client_id": USERNAME })
     let aaccounts = await doHTTP(ABANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": ABANK_CONSENT_ID }, null, { "client_id": USERNAME })
     if (!("detail" in vaccounts)) {
@@ -261,10 +262,8 @@ window.onload = async function () {
         const vbankPromises = vaccounts.map(async (acc) => {
             let balance = await doHTTP(VBANK + "accounts/" + acc["accountId"] + "/balances", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": VBANK_CONSENT_ID }, null, { "client_id": USERNAME })
             balance = parseFloat(balance['data']['balance'][0]['amount']['amount'])
-
-
             ACCOUNTS['vbank']['total_balance'] += balance
-            ACCOUNTS['vbank']["accounts"].push({ acc: acc['accountId'], balance: balance, accId: acc['account'][0]['identification'] })
+            ACCOUNTS['vbank']["accounts"].push({ acc: acc['accountId'], balance: balance, accId: acc['account'][0]['identification'], type: (acc['accountSubType'] == 'Checking' ? 'Расчётный' : 'Накопительный') })
         })
         await Promise.all(vbankPromises)
     }
@@ -274,7 +273,7 @@ window.onload = async function () {
             let balance = await doHTTP(ABANK + "accounts/" + acc["accountId"] + "/balances", { "Authorization": ATOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": ABANK_CONSENT_ID }, null, { "client_id": USERNAME })
             balance = parseFloat(balance['data']['balance'][0]['amount']['amount'])
             ACCOUNTS['abank']['total_balance'] += balance
-            ACCOUNTS['abank']["accounts"].push({ acc: acc['accountId'], balance: balance, accId: acc['account'][0]['identification'] })
+            ACCOUNTS['abank']["accounts"].push({ acc: acc['accountId'], balance: balance, accId: acc['account'][0]['identification'], type: (acc['accountSubType'] == 'Checking' ? 'Расчётный' : 'Накопительный') })
         })
         await Promise.all(abankPromises)
     }
@@ -340,7 +339,7 @@ function renderAccounts() {
         accountDiv.innerHTML = `
             <div class="account-header">
                 <div class="account-bank">${account.bank}</div>
-                <div class="account-type">Расчетный счет</div>
+                <div class="account-type">${account.type} счет</div>
             </div>
             <div class="account-info">
                 <div class="account-id-label">Номер счета</div>
@@ -354,7 +353,7 @@ function renderAccounts() {
                     </button>
                 </div>
                 <div class="account-balance-label">Баланс</div>
-                <div class="account-balance">${account.balance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Р</div>
+                <div class="account-balance">${account.balance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₽</div>
             </div>
         `
         accountsContainer.appendChild(accountDiv)
