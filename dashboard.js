@@ -1,3 +1,4 @@
+
 // Переключение между секциями (показ/скрытие секций)
 document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', (e) => {

@@ -145,6 +145,24 @@ body {
   color: var(--text-secondary);
 }
 
+/* Sidebar SVG icons via mask to allow color change */
+.nav-icon-mask {
+  background-color: var(--text-secondary);
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  -webkit-mask: var(--icon-url) no-repeat center / contain;
+  mask: var(--icon-url) no-repeat center / contain;
+}
+
+.nav-item:hover .nav-icon-mask {
+  background-color: var(--text-primary);
+}
+
+.nav-item.active .nav-icon-mask {
+  background-color: var(--primary-red);
+}
+
 .nav-text {
   flex: 1;
 }
