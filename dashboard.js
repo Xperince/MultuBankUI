@@ -260,8 +260,10 @@ window.onload = async function () {
         const vbankPromises = vaccounts.map(async (acc) => {
             let balance = await doHTTP(VBANK + "accounts/" + acc["accountId"] + "/balances", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": VBANK_CONSENT_ID }, null, { "client_id": USERNAME })
             balance = parseFloat(balance['data']['balance'][0]['amount']['amount'])
+            
+            
             ACCOUNTS['vbank']['total_balance'] += balance
-            ACCOUNTS['vbank']["accounts"].push({ acc: acc['accountId'], balance: balance })
+            ACCOUNTS['vbank']["accounts"].push({ acc: acc['accountId'], balance: balance, accId: acc['account'][0]['identification'] })
         })
         await Promise.all(vbankPromises)
     }
@@ -271,7 +273,7 @@ window.onload = async function () {
             let balance = await doHTTP(ABANK + "accounts/" + acc["accountId"] + "/balances", { "Authorization": ATOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": ABANK_CONSENT_ID }, null, { "client_id": USERNAME })
             balance = parseFloat(balance['data']['balance'][0]['amount']['amount'])
             ACCOUNTS['abank']['total_balance'] += balance
-            ACCOUNTS['abank']["accounts"].push({ acc: acc['accountId'], balance: balance })
+            ACCOUNTS['abank']["accounts"].push({ acc: acc['accountId'], balance: balance, accId: acc['account'][0]['identification'] })
         })
         await Promise.all(abankPromises)
     }
@@ -280,7 +282,7 @@ window.onload = async function () {
 
     // Обновляем общий баланс
     const totalBalance = ACCOUNTS['abank']['total_balance'] + ACCOUNTS['vbank']['total_balance'] + ACCOUNTS['sbank']['total_balance']
-    document.getElementById("totalBalance").textContent = totalBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Р'
+    document.getElementById("totalBalance").textContent = totalBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽'
 
     // Отрисовываем счета
     renderAccounts()
@@ -333,7 +335,7 @@ function renderAccounts() {
         const accountDiv = document.createElement('div')
         accountDiv.className = 'account-item'
         // Форматируем номер счета с пробелами
-        const formattedAccountId = account.acc.toString().replace(/(\d{4})(?=\d)/g, '$1 ')
+        const formattedAccountId = account.accId.toString()//.replace(/(\d{4})(?=\d)/g, '$1 ')
         accountDiv.innerHTML = `
             <div class="account-header">
                 <div class="account-bank">${account.bank}</div>
