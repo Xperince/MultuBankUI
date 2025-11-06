@@ -301,7 +301,10 @@ window.onload = async function () {
     ABANK_PCONSENT_ID = localStorage.getItem("apconsent")
     SBANK_PCONSENT_ID = localStorage.getItem("spconsent")
     IS_PREMIUM        = localStorage.getItem("premium")
-    if (IS_PREMIUM == null) IS_PREMIUM = false
+    if (IS_PREMIUM == null) {
+        if (USERNAME.search("-2") != -1 || USERNAME.search("-10") != -1) IS_PREMIUM = true 
+        else false
+    }
     let check = await doHTTP(SBANK+"account-consents/"+SBANK_CONSENT_ID, {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, null, {})
     if ("detail" in check) {
         localStorage.removeItem("sconsent")
@@ -320,7 +323,7 @@ window.onload = async function () {
     }
     
     document.getElementById("greeting").innerHTML = "Добрый день, " + USERNAME
-    getProductConsents()
+    await getProductConsents()
     
     let vaccounts = await doHTTP(VBANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": VBANK_CONSENT_ID }, null, { "client_id": USERNAME })
     let aaccounts = await doHTTP(ABANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": ABANK_CONSENT_ID }, null, { "client_id": USERNAME })
@@ -743,32 +746,81 @@ function formatISOToDateTime(isoString) {
 
 async function getTransactions() {
     Object.values(ACCOUNTS['vbank']['accounts']).forEach(async (elem, index) => {
-        let a = await doHTTP(VBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": VTOKEN, "X-Consent-Id": VBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 20})
-        a = a.data.transaction
-        a = a.map(function(elem) {
-            elem["bank"] = "VBank"
-            return elem
-        })
-        TRANSACTIONS['vbank'].push(...a)
+        let a = []
+        if (IS_PREMIUM) {
+            let i = 1;
+            while (true) {
+                a = await doHTTP(VBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": VTOKEN, "X-Consent-Id": VBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 100, "page": i})
+                a = a.data.transaction
+                if (a.length == 0) break
+                a = a.map(function(elem) {
+                    elem["bank"] = "VBank"
+                    return elem
+                })
+                TRANSACTIONS['vbank'].push(...a)
+                i++
+            }
+        } else {
+            a = await doHTTP(VBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": VTOKEN, "X-Consent-Id": VBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 15})
+            a = a.data.transaction
+            a = a.map(function(elem) {
+                elem["bank"] = "VBank"
+                return elem
+            })
+            TRANSACTIONS['vbank'].push(...a)
+        }
     })
     Object.values(ACCOUNTS['abank']['accounts']).forEach(async (elem, index) => {
-        let a = await doHTTP(ABANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": ATOKEN, "X-Consent-Id": ABANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 20})
-        a = a.data.transaction
-        a = a.map(function(elem) {
-            elem["bank"] = "ABank"
-            return elem
-        })
-        TRANSACTIONS['abank'].push(...a)
+        let a = []
+        if (IS_PREMIUM) {
+            let i = 1;
+            while (true) {
+                a = await doHTTP(ABANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": ATOKEN, "X-Consent-Id": ABANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 100, "page": i})
+                a = a.data.transaction
+                if (a.length == 0) break
+                a = a.map(function(elem) {
+                    elem["bank"] = "ABank"
+                    return elem
+                })
+                TRANSACTIONS['abank'].push(...a)
+                i++
+            }
+        } else {
+            a = await doHTTP(ABANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": ATOKEN, "X-Consent-Id": ABANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 15})
+            a = a.data.transaction
+            a = a.map(function(elem) {
+                elem["bank"] = "ABank"
+                return elem
+            })
+            TRANSACTIONS['abank'].push(...a)
+            
+        }
     })
     if (SBANK_CONSENT_ID.search("consent") != -1) {
         Object.values(ACCOUNTS['sbank']['accounts']).forEach(async (elem, index) => {
-            let a = await doHTTP(SBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": STOKEN, "X-Consent-Id": SBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 20})
-            a = a.data.transaction
-            a = a.map(function(elem) {
-            elem["bank"] = "SBank"
-            return elem
-        })
-            TRANSACTIONS['sbank'].push(...a)
+            let a = []
+            if (IS_PREMIUM) {
+                let i = 1;
+                while (true) {
+                    a = await doHTTP(SBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": STOKEN, "X-Consent-Id": SBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 100, "page": i})
+                    a = a.data.transaction
+                    if (a.length == 0) break
+                    a = a.map(function(elem) {
+                        elem["bank"] = "SBank"
+                        return elem
+                    })
+                    TRANSACTIONS['sbank'].push(...a)
+                    i++
+                }
+            } else {
+                a = await doHTTP(SBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": STOKEN, "X-Consent-Id": SBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 15})
+                a = a.data.transaction
+                a = a.map(function(elem) {
+                    elem["bank"] = "SBank"
+                    return elem
+                })
+                TRANSACTIONS['sbank'].push(...a)
+            }
         })
     }
 }
@@ -785,7 +837,7 @@ function fillTransactionTable(allTransactions) {
         let item = document.createElement("div")
         let p1 = document.createElement('p')
         p1.className = "transactionName"
-        p1.innerHTML = accInfo + info
+        p1.innerHTML = accInfo + info + " "
         let p2 = document.createElement('p')
         p2.className = "transactionAmount"
         if (type.search("Received") != -1) {

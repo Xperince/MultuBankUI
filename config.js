@@ -29,12 +29,18 @@ let TRANSACTIONS = {
     "sbank": []
 }
 
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function doHTTP(url, headers = {}, body = null, params = {}) {
+    await sleep(250)
     const hasParams = params && Object.keys(params).length > 0
     if (hasParams) {
         const query = new URLSearchParams(params).toString()
         url = url + (url.includes("?") ? "&" : "?") + query
     }
+    console.log(url)
 
     // IMPORTANT: Do not send Access-Control-* headers from the browser.
     // These are response headers that must come from the server.
