@@ -893,66 +893,71 @@ async function initializeHistoryCharts() {
         incomeChart.destroy();
     }
     const incomeCtx = document.getElementById('incomeChart');
-    if (incomeCtx) {
-        incomeChart = new Chart(incomeCtx, {
-            type: 'doughnut',
-            data: {
-                labels: incomeData.labels,
-                datasets: [{
-                    data: incomeData.values,
-                    backgroundColor: incomeData.colors,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        enabled: true
-                    }
+    if (IS_PREMIUM) {
+        if (incomeCtx) {
+            incomeChart = new Chart(incomeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: incomeData.labels,
+                    datasets: [{
+                        data: incomeData.values,
+                        backgroundColor: incomeData.colors,
+                        borderWidth: 0
+                    }]
                 },
-                cutout: '60%'
-            }
-        });
-        renderChartLegend('incomeLegend', incomeData);
-    }
-
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+            //renderChartLegend('incomeLegend', incomeData);
+        }
+    } else document.getElementById("incomeChartDiv").remove()
+    renderChartLegend('incomeLegend', incomeData);
     // Создаем диаграмму расходов
     if (expenseChart) {
         expenseChart.destroy();
     }
     const expenseCtx = document.getElementById('expenseChart');
-    if (expenseCtx) {
-        expenseChart = new Chart(expenseCtx, {
-            type: 'doughnut',
-            data: {
-                labels: expenseData.labels,
-                datasets: [{
-                    data: expenseData.values,
-                    backgroundColor: expenseData.colors,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        enabled: true
-                    }
+    if (IS_PREMIUM) {
+        if (expenseCtx) {
+            expenseChart = new Chart(expenseCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: expenseData.labels,
+                    datasets: [{
+                        data: expenseData.values,
+                        backgroundColor: expenseData.colors,
+                        borderWidth: 0
+                    }]
                 },
-                cutout: '60%'
-            }
-        });
-        renderChartLegend('expenseLegend', expenseData);
-    }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+            //renderChartLegend('expenseLegend', expenseData);
+        }
+    } else document.getElementById("expenseChartDiv").remove()
+    renderChartLegend('expenseLegend', expenseData);
 }
 
 // Функция отрисовки легенды диаграммы
@@ -961,7 +966,7 @@ function renderChartLegend(legendId, data) {
     if (!legendContainer) return;
 
     const total = data.values.reduce((sum, val) => sum + val, 0);
-
+    console.log(total)
     legendContainer.innerHTML = '';
 
     data.labels.forEach((label, index) => {
