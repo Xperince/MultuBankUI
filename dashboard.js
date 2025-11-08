@@ -109,90 +109,90 @@ if (closeProductModal && productModal) {
 }
 
 // Обработка формы открытия счета
-const accountForm = document.getElementById('accountForm');
-if (accountForm) {
-    accountForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const accountType = document.getElementById('accountType').value;
-        const initialBalance = document.getElementById('initialBalance').value;
+// const accountForm = document.getElementById('accountForm');
+// if (accountForm) {
+//     accountForm.addEventListener('submit', (e) => {
+//         e.preventDefault();
+//         const accountType = document.getElementById('accountType').value;
+//         const initialBalance = document.getElementById('initialBalance').value;
 
-        // Визуальная обратная связь
-        const button = accountForm.querySelector('.modal-button');
-        const originalText = button.textContent;
-        button.textContent = 'Создание...';
-        button.disabled = true;
+//         // Визуальная обратная связь
+//         const button = accountForm.querySelector('.modal-button');
+//         const originalText = button.textContent;
+//         button.textContent = 'Создание...';
+//         button.disabled = true;
 
-        // Здесь должна быть логика создания счета
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.disabled = false;
-            alert(`Счет "${accountType}" успешно создан`);
-            accountModal.style.display = 'none';
-            document.body.style.overflow = '';
-            accountForm.reset();
-            document.getElementById('initialBalance').value = '0';
-        }, 1500);
-    });
-}
+//         // Здесь должна быть логика создания счета
+//         setTimeout(() => {
+//             button.textContent = originalText;
+//             button.disabled = false;
+//             alert(`Счет "${accountType}" успешно создан`);
+//             accountModal.style.display = 'none';
+//             document.body.style.overflow = '';
+//             accountForm.reset();
+//             document.getElementById('initialBalance').value = '0';
+//         }, 1500);
+//     });
+// }
 
 // Обработка формы открытия продукта
-const productForm = document.getElementById('productForm');
-if (productForm) {
-    productForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const productType = document.getElementById('productType').value;
-        const productAmount = document.getElementById('productAmount').value;
+// const productForm = document.getElementById('productForm');
+// if (productForm) {
+//     productForm.addEventListener('submit', (e) => {
+//         e.preventDefault();
+//         const productType = document.getElementById('productType').value;
+//         const productAmount = document.getElementById('productAmount').value;
 
-        // Визуальная обратная связь
-        const button = productForm.querySelector('.modal-button');
-        const originalText = button.textContent;
-        button.textContent = 'Создание...';
-        button.disabled = true;
+//         // Визуальная обратная связь
+//         const button = productForm.querySelector('.modal-button');
+//         const originalText = button.textContent;
+//         button.textContent = 'Создание...';
+//         button.disabled = true;
 
-        // Здесь должна быть логика создания продукта
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.disabled = false;
-            alert(`Продукт "${productType}" успешно создан`);
-            productModal.style.display = 'none';
-            document.body.style.overflow = '';
-            productForm.reset();
-            document.getElementById('productAmount').value = '0';
-        }, 1500);
-    });
-}
+//         // Здесь должна быть логика создания продукта
+//         setTimeout(() => {
+//             button.textContent = originalText;
+//             button.disabled = false;
+//             alert(`Продукт "${productType}" успешно создан`);
+//             productModal.style.display = 'none';
+//             document.body.style.overflow = '';
+//             productForm.reset();
+//             document.getElementById('productAmount').value = '0';
+//         }, 1500);
+//     });
+// }
 
 // Обработка формы переводов
-const transferForm = document.querySelector('.transfer-form');
-if (transferForm) {
-    transferForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+// const transferForm = document.querySelector('.transfer-form');
+// if (transferForm) {
+//     transferForm.addEventListener('submit', (e) => {
+//         e.preventDefault();
 
-        const fromAccount = document.getElementById('fromAccount').value;
-        const toAccount = document.getElementById('toAccount').value;
-        const amount = document.getElementById('amount').value;
+//         const fromAccount = document.getElementById('fromAccount').value;
+//         const toAccount = document.getElementById('toAccount').value;
+//         const amount = document.getElementById('amount').value;
 
-        if (!fromAccount || !toAccount || !amount || parseFloat(amount) <= 0) {
-            alert('Пожалуйста, заполните все поля корректно');
-            return;
-        }
+//         if (!fromAccount || !toAccount || !amount || parseFloat(amount) <= 0) {
+//             alert('Пожалуйста, заполните все поля корректно');
+//             return;
+//         }
 
-        // Визуальная обратная связь
-        const button = transferForm.querySelector('.transfer-button');
-        const originalText = button.textContent;
-        button.textContent = 'Перевод...';
-        button.disabled = true;
+//         // Визуальная обратная связь
+//         const button = transferForm.querySelector('.transfer-button');
+//         const originalText = button.textContent;
+//         button.textContent = 'Перевод...';
+//         button.disabled = true;
 
-        // Здесь должна быть логика отправки перевода на сервер
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.disabled = false;
-            alert(`Перевод ${amount} Р выполнен успешно`);
-            transferForm.reset();
-            document.getElementById('amount').value = '1000';
-        }, 1500);
-    });
-}
+//         // Здесь должна быть логика отправки перевода на сервер
+//         setTimeout(() => {
+//             button.textContent = originalText;
+//             button.disabled = false;
+//             alert(`Перевод ${amount} Р выполнен успешно`);
+//             transferForm.reset();
+//             document.getElementById('amount').value = '1000';
+//         }, 1500);
+//     });
+// }
 
 // Обработка кнопок закрытия счетов
 document.querySelectorAll('.close-button').forEach(button => {
@@ -721,7 +721,18 @@ const chartColors = [
     '#ffc107', // желтый
     '#198754', // темно-зеленый
     '#0d6efd', // синий
-    '#0dcaf0'  // светло-синий
+    '#0dcaf0',  // светло-синийб
+    '#800000',
+    '#9A6324',
+    '#808000',
+    '#469990',
+    '#000075',
+    '#E6194b',
+    '#F58231',
+    '#bfef45',
+    '#911eb4',
+    '#fabed4',
+    '#dcbeff'
 ];
 
 function formatISOToDateTime(isoString) {
@@ -840,7 +851,7 @@ function fillTransactionTable(allTransactions) {
         p1.innerHTML = accInfo + info + " "
         let p2 = document.createElement('p')
         p2.className = "transactionAmount"
-        if (type.search("Received") != -1) {
+        if (type == "02") {
             p2.innerHTML = "+" + elem.amount.amount
         } else {
             p2.innerHTML = "-" + elem.amount.amount
@@ -867,7 +878,7 @@ async function initializeHistoryCharts() {
         let type = elem.bankTransactionCode.code
         let info = elem.transactionInformation
         if (info.search("Перевод") != -1) info = "Переводы"
-        if (type.search("Received") != -1) {
+        if (type == "02" && info.search("Платеж по кредиту") == -1) {
             if (info in incomes) incomes[info] += parseFloat(elem.amount.amount)
             else incomes[info] = parseFloat(elem.amount.amount)
         } else {
@@ -1041,4 +1052,32 @@ function updateHistoryCharts(transactions) {
             colors: chartColors.slice(0, expenseLabels.length)
         });
     }
+}
+
+async function makeTransaction() {
+    console.log("here")
+    let bankFrom = document.getElementById("bankFilterFrom").value.toLowerCase()
+    let bankTo = document.getElementById("bankFilterWhere").value.toLowerCase()
+    if (bankFrom == "sbank" && SBANK_CONSENT_ID.search("consent") == -1) {
+        return alert("Подтвердите доступ к Smart Bank через его приложение")
+    }
+    let accFrom = document.getElementById("from").value.toLowerCase().trim()
+    let accTo = document.getElementById("where").value.toLowerCase().trim()
+    let howMuch = Number(document.getElementById("money").value.toLowerCase().trim())
+    let accExists = false
+    if (howMuch == NaN) return alert("Введите корректные данные")
+    Object.values(ACCOUNTS[bankFrom]['accounts']).forEach((elem, i) => {
+        console.log(elem)
+        if (elem["accId"] == accFrom) {
+            accExists = true
+            return
+        }
+    })
+    if (!accExists) return alert("Указанного счета не существует")
+    let bankApi = {"vbank": VBANK, "abank": ABANK, "sbank": SBANK}[bankFrom]
+    let data = { "data": {
+        
+    }
+    }
+    let payment = await doHTTP()
 }
