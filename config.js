@@ -1,3 +1,4 @@
+const BASE_URL = "http://localhost:3000/api/";
 const VBANK = "https://vbank.open.bankingapi.ru/"
 const ABANK = "https://abank.open.bankingapi.ru/"
 const SBANK = "https://sbank.open.bankingapi.ru/"

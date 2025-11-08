@@ -16,7 +16,7 @@
         <!-- Боковая панель -->
         <aside class="sidebar">
             <div class="sidebar-top">
-                <div class="logo-icon">v</div>
+                <img class="logo-icon" src="media/logo.svg"/>
                 <div class="search-container">
                     <svg class="search-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"
                         xmlns="http://www.w3.org/2000/svg">
@@ -30,19 +30,19 @@
 
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" data-section="home">
-                    <span class="nav-icon nav-icon-mask" style="--icon-url: url('house.svg')"></span>
+                    <span class="nav-icon nav-icon-mask" style="--icon-url: url('media/house.svg')"></span>
                     <span class="nav-text">Главная</span>
                 </a>
                 <a href="#" class="nav-item" data-section="history">
-                    <span class="nav-icon nav-icon-mask" style="--icon-url: url('clock.svg')"></span>
+                    <span class="nav-icon nav-icon-mask" style="--icon-url: url('media/clock.svg')"></span>
                     <span class="nav-text">История</span>
                 </a>
                 <a href="#" class="nav-item" data-section="scenarios">
-                    <span class="nav-icon nav-icon-mask" style="--icon-url: url('wrench.svg')"></span>
+                    <span class="nav-icon nav-icon-mask" style="--icon-url: url('media/wrench.svg')"></span>
                     <span class="nav-text">Сценарии</span>
                 </a>
                 <a href="#" class="nav-item" data-section="transfers">
-                    <span class="nav-icon nav-icon-mask" style="--icon-url: url('file-ruble.svg')"></span>
+                    <span class="nav-icon nav-icon-mask" style="--icon-url: url('media/file-ruble.svg')"></span>
                     <span class="nav-text">Переводы</span>
                 </a>
             </nav>
@@ -168,6 +168,32 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Переводы -->
+            <div class="content-section" id="transfers-section">
+                <h2 class="section-title">Переводы</h2>
+                <div class="transfers-container" id="transfersContainer">
+                    <label for="bankFilter">С</label>
+                    <select class="filter-select-transfer" id="bankFilter">
+                        <option value="vbank">VBank</option>
+                        <option value="abank">ABank</option>
+                        <option value="sbank">SBank</option>
+                    </select>
+                    <label for="from">откуда</label>
+                    <input type="text" id="from" required minlength="19" maxlength="19" />
+                    <label for="where">куда</label>
+                    <input type="text" id="where" required minlength="19" maxlength="19" />
+                    <label for="from">сумма</label>
+                    <input type="text" id="money" required minlength="19" maxlength="19" />
+                    <label for="bankFilter">на</label>
+                    <select class="filter-select-transfer" id="bankFilter">
+                        <option value="vbank">VBank</option>
+                        <option value="abank">ABank</option>
+                        <option value="sbank">SBank</option>
+                    </select>
+                    <button>Перевести</button>
                 </div>
             </div>
         </main>
