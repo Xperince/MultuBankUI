@@ -286,45 +286,11 @@ async function getProductConsents() {
     }
 }
 
-window.onload = async function () {
-    if (localStorage.getItem("uname") == null || localStorage.getItem("password") == null) {
-        return window.location.href = "/index.html"
-    }
-    if (VTOKEN == "" || ATOKEN == "" || STOKEN == "") {
-        await auth(localStorage.getItem("uname"), localStorage.getItem("password"))
-    }
-    USERNAME = localStorage.getItem("uname")
-    VBANK_CONSENT_ID  = localStorage.getItem("vconsent")
-    ABANK_CONSENT_ID  = localStorage.getItem("aconsent")
-    SBANK_CONSENT_ID  = localStorage.getItem("sconsent")
-    VBANK_PCONSENT_ID = localStorage.getItem("vpconsent")
-    ABANK_PCONSENT_ID = localStorage.getItem("apconsent")
-    SBANK_PCONSENT_ID = localStorage.getItem("spconsent")
-    IS_PREMIUM        = localStorage.getItem("premium")
-    if (IS_PREMIUM == null) {
-        if (USERNAME.search("-2") != -1 || USERNAME.search("-10") != -1) IS_PREMIUM = true 
-        else false
-    }
-    let check = await doHTTP(SBANK+"account-consents/"+SBANK_CONSENT_ID, {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, null, {})
-    if ("detail" in check) {
-        localStorage.removeItem("sconsent")
-        SBANK_CONSENT_ID = ""
-        sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
-        SBANK_CONSENT_ID = sconsent['request_id']
-        alert("Подтвердите доступ к Smart Bank через его приложение")
-    } else {
-        if (check['data']['status'] == 'Revoked') {
-        localStorage.removeItem("sconsent")
-        SBANK_CONSENT_ID = ""
-        sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
-        SBANK_CONSENT_ID = sconsent['request_id']
-        alert("Подтвердите доступ к Smart Bank через его приложение")
-    }
-    }
-    
-    document.getElementById("greeting").innerHTML = "Добрый день, " + USERNAME
-    await getProductConsents()
-    
+async function getPaymentConsent(bankApi, authToken, amount, account, comment) {
+    return await doHTTP(bankApi+"payment-consents/request", {"Authorization": authToken, "X-Requesting-Bank": "team211"}, {"requesting_bank": "team211", "client_id": USERNAME, "consent_type": "single_use", "amount": amount, "debtor_account": account, "reference": comment}, {})
+}
+
+async function getAccounts() {
     let vaccounts = await doHTTP(VBANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": VBANK_CONSENT_ID }, null, { "client_id": USERNAME })
     let aaccounts = await doHTTP(ABANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": ABANK_CONSENT_ID }, null, { "client_id": USERNAME })
     if (SBANK_CONSENT_ID.search("consent") != -1) {
@@ -364,6 +330,47 @@ window.onload = async function () {
         })
         await Promise.all(abankPromises)
     }
+}
+
+window.onload = async function () {
+    if (localStorage.getItem("uname") == null || localStorage.getItem("password") == null) {
+        return window.location.href = "/index.html"
+    }
+    if (VTOKEN == "" || ATOKEN == "" || STOKEN == "") {
+        await auth(localStorage.getItem("uname"), localStorage.getItem("password"))
+    }
+    USERNAME = localStorage.getItem("uname")
+    VBANK_CONSENT_ID  = localStorage.getItem("vconsent")
+    ABANK_CONSENT_ID  = localStorage.getItem("aconsent")
+    SBANK_CONSENT_ID  = localStorage.getItem("sconsent")
+    VBANK_PCONSENT_ID = localStorage.getItem("vpconsent")
+    ABANK_PCONSENT_ID = localStorage.getItem("apconsent")
+    SBANK_PCONSENT_ID = localStorage.getItem("spconsent")
+    IS_PREMIUM        = localStorage.getItem("premium")
+    if (IS_PREMIUM == null) {
+        if (USERNAME.search("-2") != -1 || USERNAME.search("-10") != -1) IS_PREMIUM = true 
+        else false
+    }
+    let check = await doHTTP(SBANK+"account-consents/"+SBANK_CONSENT_ID, {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, null, {})
+    if ("detail" in check) {
+        localStorage.removeItem("sconsent")
+        SBANK_CONSENT_ID = ""
+        sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
+        SBANK_CONSENT_ID = sconsent['request_id']
+        alert("Подтвердите доступ к Smart Bank через его приложение")
+    } else {
+        if (check['data']['status'] == 'Revoked') {
+        localStorage.removeItem("sconsent")
+        SBANK_CONSENT_ID = ""
+        sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
+        SBANK_CONSENT_ID = sconsent['request_id']
+        alert("Подтвердите доступ к Smart Bank через его приложение")
+    }
+    }
+    
+    document.getElementById("greeting").innerHTML = "Добрый день, " + USERNAME
+    await getProductConsents()
+    await getAccounts()
     await getTransactions()
     console.log(ACCOUNTS)
     console.log(ACCOUNTS['abank']['total_balance'] + ACCOUNTS['vbank']['total_balance'] + ACCOUNTS['sbank']['total_balance'])
@@ -851,11 +858,12 @@ function fillTransactionTable(allTransactions) {
         p1.innerHTML = accInfo + info + " "
         let p2 = document.createElement('p')
         p2.className = "transactionAmount"
-        if (type == "02") {
-            p2.innerHTML = "+" + elem.amount.amount
-        } else {
-            p2.innerHTML = "-" + elem.amount.amount
-        }
+        p2.innerHTML = elem.amount.amount + " руб."
+        // if (type == "02") {
+        //     p2.innerHTML = "+" + elem.amount.amount
+        // } else {
+        //     p2.innerHTML = "-" + elem.amount.amount
+        // }
         let p3 = document.createElement("p")
         p3.className = "transactionName"
         p3.innerHTML = " " + formatISOToDateTime( elem.bookingDateTime )
@@ -878,7 +886,9 @@ async function initializeHistoryCharts() {
         let type = elem.bankTransactionCode.code
         let info = elem.transactionInformation
         if (info.search("Перевод") != -1) info = "Переводы"
-        if (type == "02" && info.search("Платеж по кредиту") == -1) {
+        if (info.search("Платеж по кредиту") != -1) info = "Платежи по кредитам"
+        if (info.search("Проценты по депозиту") != -1) info = "Проценты по депозиту"
+        if (type == "02" && info.search("Платежи по кредитам") == -1) {
             if (info in incomes) incomes[info] += parseFloat(elem.amount.amount)
             else incomes[info] = parseFloat(elem.amount.amount)
         } else {
@@ -1057,15 +1067,15 @@ function updateHistoryCharts(transactions) {
 async function makeTransaction() {
     console.log("here")
     let bankFrom = document.getElementById("bankFilterFrom").value.toLowerCase()
-    let bankTo = document.getElementById("bankFilterWhere").value.toLowerCase()
+    //let bankTo = document.getElementById("bankFilterWhere").value.toLowerCase()
     if (bankFrom == "sbank" && SBANK_CONSENT_ID.search("consent") == -1) {
-        return alert("Подтвердите доступ к Smart Bank через его приложение")
+        return alert("❌ Подтвердите доступ к Smart Bank через его приложение")
     }
     let accFrom = document.getElementById("from").value.toLowerCase().trim()
     let accTo = document.getElementById("where").value.toLowerCase().trim()
-    let howMuch = Number(document.getElementById("money").value.toLowerCase().trim())
+    let howMuch = parseFloat(document.getElementById("money").value.toLowerCase().trim().replace(",", "."))
     let accExists = false
-    if (howMuch == NaN) return alert("Введите корректные данные")
+    if (howMuch == NaN) return alert("❌ Введите корректные данные")
     Object.values(ACCOUNTS[bankFrom]['accounts']).forEach((elem, i) => {
         console.log(elem)
         if (elem["accId"] == accFrom) {
@@ -1073,11 +1083,43 @@ async function makeTransaction() {
             return
         }
     })
-    if (!accExists) return alert("Указанного счета не существует")
+    if (!accExists) return alert("❌ Указанного счета не существует")
     let bankApi = {"vbank": VBANK, "abank": ABANK, "sbank": SBANK}[bankFrom]
+    let authToken = {"vbank": VTOKEN, "abank": ATOKEN, "sbank": STOKEN}[bankFrom]
+    //console.log("%s %s", bankFrom, bankTo)
     let data = { "data": {
-        
+        "initiation": {
+            "instructedAmount": {
+                "amount": howMuch,
+                "currency": "RUB"
+            },
+            "debtorAccount": {
+                "schemeName": "RU.CBR.PAN",
+                "identification": accFrom
+            },
+            "creditorAccount": {
+                "schemeName": "RU.CBR.PAN",
+                "identification": accTo
+            },
+            "comment": "Перевод со счёта " + accFrom + " банка " + bankFrom
+        }
     }
     }
-    let payment = await doHTTP()
+    // if (bankFrom != bankTo) {
+    //     data["data"]["initiation"]['creditorAccount']["bank_code"] = bankTo
+    // }
+    let consent = await getPaymentConsent(bankApi, authToken, howMuch, accTo, "Перевод со счёта " + accFrom + "банка " + bankFrom)
+    consent = consent['consent_id']
+    console.log("consent %s", consent)
+    let payment = await doHTTP(bankApi+"payments", {"Authorization": authToken,  "X-Requesting-Bank": "team211", "X-Payment-Consent-Id": consent}, data, {"client_id": USERNAME})
+    console.log(payment)
+    if ("detail" in payment) {
+        if (payment['detail'] == "Insufficient funds") return alert("❌ Недостаточно средств")
+    }
+    if (payment["data"]["status"] == "AcceptedSettlementCompleted") {
+        await getAccounts()
+        renderAccounts();
+        await getTransactions();
+        return alert("✅ Средства успешно переведены!")
+    }
 }
