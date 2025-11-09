@@ -20,7 +20,13 @@ document.querySelectorAll('.nav-item').forEach(async item => {
         document.querySelectorAll('.content-section').forEach(section => {
             section.style.display = 'none';
         });
-
+        if (sectionName == 'vip') {
+            document.getElementById("summary-cards").style.display = 'none';
+            document.getElementById("greeting").style.display = 'none'
+        } else {
+            document.getElementById('summary-cards').style.display = 'grid'
+            document.getElementById("greeting").style.display = 'block'
+        }
         // Показываем выбранную секцию
         const targetSection = document.getElementById(sectionId);
         if (targetSection) {
