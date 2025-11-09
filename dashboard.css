@@ -489,6 +489,14 @@ body {
   margin-bottom: 24px;
 }
 
+.panel-title-contact {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
 .another-text-vip {
   text-align: center;
   font-size: 18px;
@@ -749,6 +757,13 @@ input {
   width: 135px;
 }
 
+.input-contact {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  width: 532px;
+}
+
 .contacts-div {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -882,7 +897,7 @@ th, td {
   border: 2px solid #fbd0d0;
   border-radius: 8px;
   padding: 10px 24px;
-  color: white;
+  color: black;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -893,6 +908,7 @@ th, td {
 .scenario-add-button:hover {
   background: #fc4e2f;
   border-color: #fc4e2f;
+  color: white;
 }
 
 .scenarios-list-container {
@@ -903,7 +919,7 @@ th, td {
 }
 
 .scenario-item {
-  background: #f5f5f5;
+  background: white;
   border-radius: var(--border-radius);
   padding: 20px 24px;
   border: var(--border);
@@ -930,7 +946,7 @@ th, td {
   border: 2px solid #fbd0d0;
   border-radius: 8px;
   padding: 10px 24px;
-  color: white;
+  color: black;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -941,6 +957,7 @@ th, td {
 .scenario-delete-button:hover {
   background: #fc4e2f;
   border-color: #fc4e2f;
+  color: white;
 }
 
 table {
