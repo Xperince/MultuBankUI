@@ -223,6 +223,65 @@
                 </div>
             </div>
 
+            <!-- Сценарии / Автоматизация -->
+            <div class="content-section" id="scenarios-section">
+                <h2 class="section-title">Автоматизация</h2>
+
+                <!-- Создание команды -->
+                <div class="scenarios-create-section">
+                    <h2 class="scenarios-subtitle">Создание команды</h2>
+                    <div class="scenario-forms-container">
+                        <!-- Форма 1 -->
+                        <div class="scenario-form-card">
+                            <div class="scenario-form-content">
+                                <span class="scenario-form-text">Если со счета</span>
+                                <input type="text" class="scenario-input" placeholder="Название" id="scenario-from-account-1" />
+                                <span class="scenario-form-text">поступила сумма</span>
+                                <select class="scenario-select" id="scenario-condition-1">
+                                    <option value=">=" selected>>=</option>
+                                    <option value=">">&gt;</option>
+                                    <option value="<=">&lt;=</option>
+                                    <option value="<">&lt;</option>
+                                    <option value="==">==</option>
+                                </select>
+                                <input type="text" class="scenario-input-amount" id="scenario-amount-1" />
+                                <span class="scenario-form-text">, то перевести деньги на счет</span>
+                                <input type="text" class="scenario-input" id="scenario-to-account-1" />
+                            </div>
+                            <button class="scenario-add-button" onclick="addScenario(1)">Добавить</button>
+                        </div>
+
+                        <!-- Форма 2 -->
+                        <div class="scenario-form-card">
+                            <div class="scenario-form-content">
+                                <span class="scenario-form-text">Если со счета</span>
+                                <input type="text" class="scenario-input" placeholder="Название" id="scenario-from-account-2" />
+                                <span class="scenario-form-text">поступила сумма</span>
+                                <select class="scenario-select" id="scenario-condition-2">
+                                    <option value=">=" selected>>=</option>
+                                    <option value=">">&gt;</option>
+                                    <option value="<=">&lt;=</option>
+                                    <option value="<">&lt;</option>
+                                    <option value="==">==</option>
+                                </select>
+                                <input type="text" class="scenario-input-amount" id="scenario-amount-2" />
+                                <span class="scenario-form-text">, то перевести деньги на счет</span>
+                                <input type="text" class="scenario-input" id="scenario-to-account-2" />
+                            </div>
+                            <button class="scenario-add-button" onclick="addScenario(2)">Добавить</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Все сценарии -->
+                <div class="scenarios-list-section">
+                    <h2 class="scenarios-subtitle">Все сценарии</h2>
+                    <div class="scenarios-list-container" id="scenariosListContainer">
+                        <!-- Сценарии будут добавлены динамически -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Премиум-->
             <div class="content-section" id="vip-section">
                 <div class="content-section-vip">

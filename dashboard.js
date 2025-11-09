@@ -16,30 +16,33 @@ document.querySelectorAll('.nav-item').forEach(async item => {
         const sectionName = item.getAttribute('data-section');
         const sectionId = sectionName + '-section';
 
-        // Скрываем все секции
+        const greeting = document.querySelector('.greeting');
+        const summaryCards = document.querySelector('.summary-cards');
+
         document.querySelectorAll('.content-section').forEach(section => {
             section.style.display = 'none';
         });
-        if (sectionName == 'vip') {
-            document.getElementById("summary-cards").style.display = 'none';
-            document.getElementById("greeting").style.display = 'none'
-        } else {
-            document.getElementById('summary-cards').style.display = 'grid'
-            document.getElementById("greeting").style.display = 'block'
-        }
-        // Показываем выбранную секцию
+
         const targetSection = document.getElementById(sectionId);
         if (targetSection) {
             targetSection.style.display = 'block';
 
-            // Если это секция истории, инициализируем диаграммы
+            if (sectionName === 'home') {
+                if (greeting) greeting.style.display = 'block';
+                if (summaryCards) summaryCards.style.display = 'grid';
+            } else {
+                if (greeting) greeting.style.display = 'none';
+                if (summaryCards) summaryCards.style.display = 'none';
+            }
+
             if (sectionName === 'history') {
                 await initializeHistoryCharts();
             }
         } else if (sectionName === 'home') {
-            // Показываем главную секцию (счета и продукты)
             document.getElementById('accounts-section').style.display = 'block';
             document.getElementById('products-section').style.display = 'block';
+            if (greeting) greeting.style.display = 'block';
+            if (summaryCards) summaryCards.style.display = 'grid';
         }
     });
 });
@@ -216,7 +219,7 @@ async function auth(uname, passw) {
     console.log("auth")
     let vauth = await doHTTP(VBANK + "auth/bank-token", {}, {}, { "client_id": "team211", "client_secret": passw })
     let aauth = await doHTTP(ABANK + "auth/bank-token", {}, {}, { "client_id": "team211", "client_secret": passw })
-    let sauth = await doHTTP(SBANK+  "auth/bank-token", {}, {}, { "client_id": "team211", "client_secret": passw })
+    let sauth = await doHTTP(SBANK + "auth/bank-token", {}, {}, { "client_id": "team211", "client_secret": passw })
     if ("access_token" in vauth && "access_token" in aauth && "access_token" in sauth) {
         VTOKEN = "Bearer " + vauth["access_token"]
         ATOKEN = "Bearer " + aauth["access_token"]
@@ -225,17 +228,17 @@ async function auth(uname, passw) {
         let aconsent = localStorage.getItem("aconsent")
         let sconsent = localStorage.getItem("sconsent")
         if (sconsent == null) {
-            sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": uname, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
+            sconsent = await doHTTP(SBANK + "account-consents/request", { "Authorization": STOKEN, "X-Requesting-Bank": "team211" }, { "client_id": uname, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211" }, {})
             console.log(sconsent)
             SBANK_CONSENT_ID = sconsent['request_id']
         } else SBANK_CONSENT_ID = sconsent
         localStorage.setItem("sconsent", SBANK_CONSENT_ID)
-        let check = await doHTTP(SBANK+"account-consents/"+SBANK_CONSENT_ID, {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, null, {})
+        let check = await doHTTP(SBANK + "account-consents/" + SBANK_CONSENT_ID, { "Authorization": STOKEN, "X-Requesting-Bank": "team211" }, null, {})
         if (SBANK_CONSENT_ID.search("req") != -1) {
-           
+
             console.log(check['data']["status"])
             if (check['data']['status'] == "Authorized") {
-                
+
                 SBANK_CONSENT_ID = check['data']['consentId']
                 localStorage.setItem("sconsent", SBANK_CONSENT_ID)
             } else
@@ -273,27 +276,27 @@ async function getConsent(uname, passw) {
 
 async function getProductConsents() {
     if (VBANK_PCONSENT_ID == "" || VBANK_PCONSENT_ID == null) {
-        let vconsent = await doHTTP(VBANK+"product-agreement-consents/request", {"Authorization": VTOKEN}, {"requesting_bank": "team211","client_id": USERNAME,"read_product_agreements": true,"open_product_agreements": true,"close_product_agreements": false,"allowed_product_types": ["deposit", "card"],"max_amount": 9999999999.99,}, {"client_id": USERNAME})
+        let vconsent = await doHTTP(VBANK + "product-agreement-consents/request", { "Authorization": VTOKEN }, { "requesting_bank": "team211", "client_id": USERNAME, "read_product_agreements": true, "open_product_agreements": true, "close_product_agreements": false, "allowed_product_types": ["deposit", "card"], "max_amount": 9999999999.99, }, { "client_id": USERNAME })
         console.log(vconsent)
         VBANK_PCONSENT_ID = vconsent['consent_id']
         localStorage.setItem("vpconsent", VBANK_PCONSENT_ID)
     }
     if (ABANK_PCONSENT_ID == "" || ABANK_PCONSENT_ID == null) {
-        let aconsent = await doHTTP(ABANK+"product-agreement-consents/request", {"Authorization": ATOKEN}, {"requesting_bank": "team211","client_id": USERNAME,"read_product_agreements": true,"open_product_agreements": true,"close_product_agreements": false,"allowed_product_types": ["deposit", "card"],"max_amount": 9999999999.99,}, {"client_id": USERNAME})
+        let aconsent = await doHTTP(ABANK + "product-agreement-consents/request", { "Authorization": ATOKEN }, { "requesting_bank": "team211", "client_id": USERNAME, "read_product_agreements": true, "open_product_agreements": true, "close_product_agreements": false, "allowed_product_types": ["deposit", "card"], "max_amount": 9999999999.99, }, { "client_id": USERNAME })
         ABANK_PCONSENT_ID = aconsent['consent_id']
         localStorage.setItem("apconsent", ABANK_PCONSENT_ID)
     }
     if (SBANK_CONSENT_ID.search("consent") != -1) {
         if (SBANK_PCONSENT_ID == "" || SBANK_PCONSENT_ID == null) {
-            let sconsent = await doHTTP(SBANK+"product-agreement-consents/request", {"Authorization": STOKEN}, {"requesting_bank": "team211","client_id": USERNAME,"read_product_agreements": true,"open_product_agreements": true,"close_product_agreements": false,"allowed_product_types": ["deposit", "card"],"max_amount": 9999999999.99,}, {"client_id": USERNAME})
+            let sconsent = await doHTTP(SBANK + "product-agreement-consents/request", { "Authorization": STOKEN }, { "requesting_bank": "team211", "client_id": USERNAME, "read_product_agreements": true, "open_product_agreements": true, "close_product_agreements": false, "allowed_product_types": ["deposit", "card"], "max_amount": 9999999999.99, }, { "client_id": USERNAME })
             SBANK_PCONSENT_ID = sconsent['consent_id']
             localStorage.setItem("spconsent", SBANK_PCONSENT_ID)
-        } 
+        }
     }
 }
 
 async function getPaymentConsent(bankApi, authToken, amount, account, comment) {
-    return await doHTTP(bankApi+"payment-consents/request", {"Authorization": authToken, "X-Requesting-Bank": "team211"}, {"requesting_bank": "team211", "client_id": USERNAME, "consent_type": "single_use", "amount": amount, "debtor_account": account, "reference": comment}, {})
+    return await doHTTP(bankApi + "payment-consents/request", { "Authorization": authToken, "X-Requesting-Bank": "team211" }, { "requesting_bank": "team211", "client_id": USERNAME, "consent_type": "single_use", "amount": amount, "debtor_account": account, "reference": comment }, {})
 }
 
 async function getAccounts() {
@@ -346,34 +349,34 @@ window.onload = async function () {
         await auth(localStorage.getItem("uname"), localStorage.getItem("password"))
     }
     USERNAME = localStorage.getItem("uname")
-    VBANK_CONSENT_ID  = localStorage.getItem("vconsent")
-    ABANK_CONSENT_ID  = localStorage.getItem("aconsent")
-    SBANK_CONSENT_ID  = localStorage.getItem("sconsent")
+    VBANK_CONSENT_ID = localStorage.getItem("vconsent")
+    ABANK_CONSENT_ID = localStorage.getItem("aconsent")
+    SBANK_CONSENT_ID = localStorage.getItem("sconsent")
     VBANK_PCONSENT_ID = localStorage.getItem("vpconsent")
     ABANK_PCONSENT_ID = localStorage.getItem("apconsent")
     SBANK_PCONSENT_ID = localStorage.getItem("spconsent")
-    IS_PREMIUM        = localStorage.getItem("premium")
+    IS_PREMIUM = localStorage.getItem("premium")
     if (IS_PREMIUM == null) {
-        if (USERNAME.search("-2") != -1 || USERNAME.search("-10") != -1) IS_PREMIUM = true 
+        if (USERNAME.search("-2") != -1 || USERNAME.search("-10") != -1) IS_PREMIUM = true
         else false
     }
-    let check = await doHTTP(SBANK+"account-consents/"+SBANK_CONSENT_ID, {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, null, {})
+    let check = await doHTTP(SBANK + "account-consents/" + SBANK_CONSENT_ID, { "Authorization": STOKEN, "X-Requesting-Bank": "team211" }, null, {})
     if ("detail" in check) {
         localStorage.removeItem("sconsent")
         SBANK_CONSENT_ID = ""
-        sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
+        sconsent = await doHTTP(SBANK + "account-consents/request", { "Authorization": STOKEN, "X-Requesting-Bank": "team211" }, { "client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211" }, {})
         SBANK_CONSENT_ID = sconsent['request_id']
         alert("Подтвердите доступ к Smart Bank через его приложение")
     } else {
         if (check['data']['status'] == 'Revoked') {
-        localStorage.removeItem("sconsent")
-        SBANK_CONSENT_ID = ""
-        sconsent = await doHTTP(SBANK+"account-consents/request", {"Authorization": STOKEN, "X-Requesting-Bank": "team211"}, {"client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211"}, {})
-        SBANK_CONSENT_ID = sconsent['request_id']
-        alert("Подтвердите доступ к Smart Bank через его приложение")
+            localStorage.removeItem("sconsent")
+            SBANK_CONSENT_ID = ""
+            sconsent = await doHTTP(SBANK + "account-consents/request", { "Authorization": STOKEN, "X-Requesting-Bank": "team211" }, { "client_id": USERNAME, "permissions": ["ReadAccountsDetail", "ReadBalances", "ReadTransactionsDetail"], "reason": "", "requesting_bank": "team211", "requesting_bank_name": "team211" }, {})
+            SBANK_CONSENT_ID = sconsent['request_id']
+            alert("Подтвердите доступ к Smart Bank через его приложение")
+        }
     }
-    }
-    
+
     document.getElementById("greeting").innerHTML = "Добрый день, " + USERNAME
     await getProductConsents()
     await getAccounts()
@@ -412,6 +415,8 @@ window.onload = async function () {
             section.style.display = 'none';
         }
     })
+
+    loadScenarios();
 }
 
 // Функция для отрисовки счетов
@@ -547,16 +552,16 @@ function renderAccounts() {
 
 async function getProducts() {
     if (VBANK_PCONSENT_ID != null && VBANK_PCONSENT_ID != "") {
-        let products = await doHTTP(VBANK+"product-agreements", {"Authorization": VTOKEN, "X-Product-Agreement-Consent-Id": VBANK_PCONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"client_id": USERNAME})
+        let products = await doHTTP(VBANK + "product-agreements", { "Authorization": VTOKEN, "X-Product-Agreement-Consent-Id": VBANK_PCONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "client_id": USERNAME })
         PRODUCTS['vbank'].push(...products['data'])
     }
     if (ABANK_PCONSENT_ID != null && ABANK_PCONSENT_ID != "") {
-        let products = await doHTTP(ABANK+"product-agreements", {"Authorization": ATOKEN, "X-Product-Agreement-Consent-Id": ABANK_PCONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"client_id": USERNAME})
+        let products = await doHTTP(ABANK + "product-agreements", { "Authorization": ATOKEN, "X-Product-Agreement-Consent-Id": ABANK_PCONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "client_id": USERNAME })
         PRODUCTS['abank'].push(...products['data'])
     }
     if (SBANK_CONSENT_ID.search("consent") != -1) {
         if (SBANK_PCONSENT_ID != null && SBANK_PCONSENT_ID != "") {
-            let products = await doHTTP(SBANK+"product-agreements", {"Authorization": STOKEN, "X-Product-Agreement-Consent-Id": SBANK_PCONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"client_id": USERNAME})
+            let products = await doHTTP(SBANK + "product-agreements", { "Authorization": STOKEN, "X-Product-Agreement-Consent-Id": SBANK_PCONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "client_id": USERNAME })
             PRODUCTS['sbank'].push(...products['data'])
         }
     }
@@ -593,11 +598,11 @@ function renderProducts() {
                 </div>
         `
         if (percent != "") {
-           placeholder1.innerHTML += `<div class="product-detail-row">
+            placeholder1.innerHTML += `<div class="product-detail-row">
                         <span class="product-detail-label">Процентная ставка:</span>
                         <span class="product-detail-value">${percent}%</span>
                     </div>
-            ` 
+            `
         }
         placeholder1.innerHTML += "</div>"
         productsContainer.appendChild(placeholder1)
@@ -628,11 +633,11 @@ function renderProducts() {
                 </div>
         `
         if (percent != "") {
-           placeholder1.innerHTML += `<div class="product-detail-row">
+            placeholder1.innerHTML += `<div class="product-detail-row">
                         <span class="product-detail-label">Процентная ставка:</span>
                         <span class="product-detail-value">${percent}%</span>
                     </div>
-            ` 
+            `
         }
         placeholder1.innerHTML += "</div>"
         productsContainer.appendChild(placeholder1)
@@ -663,11 +668,11 @@ function renderProducts() {
                 </div>
         `
         if (percent != "") {
-           placeholder1.innerHTML += `<div class="product-detail-row">
+            placeholder1.innerHTML += `<div class="product-detail-row">
                         <span class="product-detail-label">Процентная ставка:</span>
                         <span class="product-detail-value">${percent}%</span>
                     </div>
-            ` 
+            `
         }
         placeholder1.innerHTML += "</div>"
         productsContainer.appendChild(placeholder1)
@@ -751,19 +756,19 @@ const chartColors = [
 function formatISOToDateTime(isoString) {
     // Создаем объект Date из строки ISO
     const date = new Date(isoString);
-    
+
     // Проверяем, что дата валидна
     if (isNaN(date.getTime())) {
         return isoString
     }
-    
+
     // Получаем компоненты даты
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    
+
     // Форматируем в нужный вид
     return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
@@ -774,10 +779,10 @@ async function getTransactions() {
         if (IS_PREMIUM) {
             let i = 1;
             while (true) {
-                a = await doHTTP(VBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": VTOKEN, "X-Consent-Id": VBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 100, "page": i})
+                a = await doHTTP(VBANK + "accounts/" + elem['acc'] + "/transactions", { "Authorization": VTOKEN, "X-Consent-Id": VBANK_CONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "limit": 100, "page": i })
                 a = a.data.transaction
                 if (a.length == 0) break
-                a = a.map(function(elem) {
+                a = a.map(function (elem) {
                     elem["bank"] = "VBank"
                     return elem
                 })
@@ -785,9 +790,9 @@ async function getTransactions() {
                 i++
             }
         } else {
-            a = await doHTTP(VBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": VTOKEN, "X-Consent-Id": VBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 15})
+            a = await doHTTP(VBANK + "accounts/" + elem['acc'] + "/transactions", { "Authorization": VTOKEN, "X-Consent-Id": VBANK_CONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "limit": 15 })
             a = a.data.transaction
-            a = a.map(function(elem) {
+            a = a.map(function (elem) {
                 elem["bank"] = "VBank"
                 return elem
             })
@@ -799,10 +804,10 @@ async function getTransactions() {
         if (IS_PREMIUM) {
             let i = 1;
             while (true) {
-                a = await doHTTP(ABANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": ATOKEN, "X-Consent-Id": ABANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 100, "page": i})
+                a = await doHTTP(ABANK + "accounts/" + elem['acc'] + "/transactions", { "Authorization": ATOKEN, "X-Consent-Id": ABANK_CONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "limit": 100, "page": i })
                 a = a.data.transaction
                 if (a.length == 0) break
-                a = a.map(function(elem) {
+                a = a.map(function (elem) {
                     elem["bank"] = "ABank"
                     return elem
                 })
@@ -810,14 +815,14 @@ async function getTransactions() {
                 i++
             }
         } else {
-            a = await doHTTP(ABANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": ATOKEN, "X-Consent-Id": ABANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 15})
+            a = await doHTTP(ABANK + "accounts/" + elem['acc'] + "/transactions", { "Authorization": ATOKEN, "X-Consent-Id": ABANK_CONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "limit": 15 })
             a = a.data.transaction
-            a = a.map(function(elem) {
+            a = a.map(function (elem) {
                 elem["bank"] = "ABank"
                 return elem
             })
             TRANSACTIONS['abank'].push(...a)
-            
+
         }
     })
     if (SBANK_CONSENT_ID.search("consent") != -1) {
@@ -826,10 +831,10 @@ async function getTransactions() {
             if (IS_PREMIUM) {
                 let i = 1;
                 while (true) {
-                    a = await doHTTP(SBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": STOKEN, "X-Consent-Id": SBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 100, "page": i})
+                    a = await doHTTP(SBANK + "accounts/" + elem['acc'] + "/transactions", { "Authorization": STOKEN, "X-Consent-Id": SBANK_CONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "limit": 100, "page": i })
                     a = a.data.transaction
                     if (a.length == 0) break
-                    a = a.map(function(elem) {
+                    a = a.map(function (elem) {
                         elem["bank"] = "SBank"
                         return elem
                     })
@@ -837,9 +842,9 @@ async function getTransactions() {
                     i++
                 }
             } else {
-                a = await doHTTP(SBANK+"accounts/"+elem['acc']+"/transactions", {"Authorization": STOKEN, "X-Consent-Id": SBANK_CONSENT_ID, "X-Requesting-Bank": "team211"}, null, {"limit": 15})
+                a = await doHTTP(SBANK + "accounts/" + elem['acc'] + "/transactions", { "Authorization": STOKEN, "X-Consent-Id": SBANK_CONSENT_ID, "X-Requesting-Bank": "team211" }, null, { "limit": 15 })
                 a = a.data.transaction
-                a = a.map(function(elem) {
+                a = a.map(function (elem) {
                     elem["bank"] = "SBank"
                     return elem
                 })
@@ -850,7 +855,7 @@ async function getTransactions() {
 }
 
 function fillTransactionTable(allTransactions) {
-    allTransactions.sort((a,b) => new Date(b.bookingDateTime).getTime().toString().localeCompare(new Date(a.bookingDateTime).getTime().toString()))
+    allTransactions.sort((a, b) => new Date(b.bookingDateTime).getTime().toString().localeCompare(new Date(a.bookingDateTime).getTime().toString()))
     let container = document.getElementById("tableContainer")
     container.innerHTML = ""
     allTransactions.forEach((elem, i) => {
@@ -872,7 +877,7 @@ function fillTransactionTable(allTransactions) {
         // }
         let p3 = document.createElement("p")
         p3.className = "transactionName"
-        p3.innerHTML = " " + formatISOToDateTime( elem.bookingDateTime )
+        p3.innerHTML = " " + formatISOToDateTime(elem.bookingDateTime)
         item.appendChild(p1)
         item.appendChild(p2)
         item.appendChild(p3)
@@ -1090,26 +1095,27 @@ async function makeTransaction() {
         }
     })
     if (!accExists) return alert("❌ Указанного счета не существует")
-    let bankApi = {"vbank": VBANK, "abank": ABANK, "sbank": SBANK}[bankFrom]
-    let authToken = {"vbank": VTOKEN, "abank": ATOKEN, "sbank": STOKEN}[bankFrom]
+    let bankApi = { "vbank": VBANK, "abank": ABANK, "sbank": SBANK }[bankFrom]
+    let authToken = { "vbank": VTOKEN, "abank": ATOKEN, "sbank": STOKEN }[bankFrom]
     //console.log("%s %s", bankFrom, bankTo)
-    let data = { "data": {
-        "initiation": {
-            "instructedAmount": {
-                "amount": howMuch,
-                "currency": "RUB"
-            },
-            "debtorAccount": {
-                "schemeName": "RU.CBR.PAN",
-                "identification": accFrom
-            },
-            "creditorAccount": {
-                "schemeName": "RU.CBR.PAN",
-                "identification": accTo
-            },
-            "comment": "Перевод со счёта " + accFrom + " банка " + bankFrom
+    let data = {
+        "data": {
+            "initiation": {
+                "instructedAmount": {
+                    "amount": howMuch,
+                    "currency": "RUB"
+                },
+                "debtorAccount": {
+                    "schemeName": "RU.CBR.PAN",
+                    "identification": accFrom
+                },
+                "creditorAccount": {
+                    "schemeName": "RU.CBR.PAN",
+                    "identification": accTo
+                },
+                "comment": "Перевод со счёта " + accFrom + " банка " + bankFrom
+            }
         }
-    }
     }
     // if (bankFrom != bankTo) {
     //     data["data"]["initiation"]['creditorAccount']["bank_code"] = bankTo
@@ -1117,11 +1123,10 @@ async function makeTransaction() {
     let consent = await getPaymentConsent(bankApi, authToken, howMuch, accTo, "Перевод со счёта " + accFrom + "банка " + bankFrom)
     consent = consent['consent_id']
     console.log("consent %s", consent)
-    let payment = await doHTTP(bankApi+"payments", {"Authorization": authToken,  "X-Requesting-Bank": "team211", "X-Payment-Consent-Id": consent}, data, {"client_id": USERNAME})
+    let payment = await doHTTP(bankApi + "payments", { "Authorization": authToken, "X-Requesting-Bank": "team211", "X-Payment-Consent-Id": consent }, data, { "client_id": USERNAME })
     console.log(payment)
     if ("detail" in payment) {
         if (payment['detail'] == "Insufficient funds") return alert("❌ Недостаточно средств")
-        if (payment['detail'].search("not found in any bank") != -1) return alert("❌ Указанного счета не существует")
     }
     if (payment["data"]["status"] == "AcceptedSettlementCompleted") {
         await getAccounts()
@@ -1130,3 +1135,86 @@ async function makeTransaction() {
         return alert("✅ Средства успешно переведены!")
     }
 }
+
+let SCENARIOS = [];
+
+function loadScenarios() {
+    const savedScenarios = localStorage.getItem('scenarios');
+    if (savedScenarios) {
+        SCENARIOS = JSON.parse(savedScenarios);
+        renderScenarios();
+    }
+}
+
+function saveScenarios() {
+    localStorage.setItem('scenarios', JSON.stringify(SCENARIOS));
+}
+
+function addScenario(formNumber) {
+    const fromAccount = document.getElementById(`scenario-from-account-${formNumber}`).value.trim();
+    const condition = document.getElementById(`scenario-condition-${formNumber}`).value;
+    const amount = document.getElementById(`scenario-amount-${formNumber}`).value.trim();
+    const toAccount = document.getElementById(`scenario-to-account-${formNumber}`).value.trim();
+
+    if (!fromAccount || !amount || !toAccount) {
+        alert('Пожалуйста, заполните все поля');
+        return;
+    }
+
+    if (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+        alert('Пожалуйста, введите корректную сумму');
+        return;
+    }
+
+    const scenario = {
+        id: Date.now(),
+        fromAccount: fromAccount,
+        condition: condition,
+        amount: amount,
+        toAccount: toAccount
+    };
+
+    SCENARIOS.push(scenario);
+    saveScenarios();
+    renderScenarios();
+
+    document.getElementById(`scenario-from-account-${formNumber}`).value = '';
+    document.getElementById(`scenario-amount-${formNumber}`).value = '';
+    document.getElementById(`scenario-to-account-${formNumber}`).value = '';
+    document.getElementById(`scenario-condition-${formNumber}`).value = '>=';
+}
+
+function deleteScenario(scenarioId) {
+    if (confirm('Вы действительно хотите удалить этот сценарий?')) {
+        SCENARIOS = SCENARIOS.filter(s => s.id !== scenarioId);
+        saveScenarios();
+        renderScenarios();
+    }
+}
+
+function renderScenarios() {
+    const container = document.getElementById('scenariosListContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (SCENARIOS.length === 0) {
+        return;
+    }
+
+    SCENARIOS.forEach(scenario => {
+        const scenarioItem = document.createElement('div');
+        scenarioItem.className = 'scenario-item';
+        const scenarioText = `${scenario.fromAccount}, ${scenario.condition}${scenario.amount}, →${scenario.toAccount}`;
+
+        scenarioItem.innerHTML = `
+            <div class="scenario-item-text">${scenarioText}</div>
+            <button class="scenario-delete-button" onclick="deleteScenario(${scenario.id})">Удалить</button>
+        `;
+
+        container.appendChild(scenarioItem);
+    });
+}
+
+window.addScenario = addScenario;
+window.deleteScenario = deleteScenario;
