@@ -52,7 +52,7 @@
             </nav>
 
             <div class="sidebar-bottom">
-                <button class="nav-item-bottom">
+                <button class="nav-item-bottom" onclick="logout()">
                     <span class="nav-icon nav-icon-mask" style="--icon-url: url('media/exit.svg')"></span>
                     <span class="nav-text">Выйти</span>
                 </button>
@@ -192,11 +192,11 @@
                         <option value="sbank">SBank</option>
                     </select>
                     <label for="from">откуда</label>
-                    <input type="text" id="from" required />
+                    <input type="text" id="from" required size="25" style="width: auto;" placeholder="Счет отправителя"/>
                     <label for="where">куда</label>
-                    <input type="text" id="where" required />
+                    <input type="text" id="where" required size="25" style="width: auto" placeholder="Счет получателя" />
                     <label for="from">сумма</label>
-                    <input type="text" id="money" required />
+                    <input type="text" id="money" required placeholder="Сумма" />
                     <!-- <label for="bankFilter">на</label>
                     <select class="filter-select-transfer" id="bankFilterWhere">
                         <option value="vbank">VBank</option>
@@ -306,7 +306,7 @@
                         </tr>
                         <tr>
                             <td>История (отображение)</td>
-                            <td>В виде таблици</td>
+                            <td>В виде таблицы</td>
                             <td>В виде диаграммы</td>
                         </tr>
                         <tr>
@@ -325,7 +325,7 @@
                             <td>Безлимит</td>
                         </tr>
                     </table>
-                    <button class="scenario-add-button">Оформить за 300₽/месяц</button>
+                    <button class="scenario-add-button" onclick="purchasePremium()" id="premium_button">Оформить за 300₽/месяц</button>
                 </div>
             </div>
         </main>
