@@ -893,8 +893,8 @@ th, td {
 }
 
 .scenario-add-button {
-  background: #fbd0d0;
-  border: 2px solid #fbd0d0;
+  background: #fc4e2f;
+  border: 2px solid #dc462c;
   border-radius: 8px;
   padding: 10px 24px;
   color: black;
@@ -962,4 +962,18 @@ th, td {
 
 table {
   margin-bottom: 80px;
+}
+
+.premium-activated {
+  background: #fbd0d0;
+  color: #dc462c;
+  padding: 10px 24px;
+  border: 2px solid #dc462c;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
 }

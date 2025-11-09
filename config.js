@@ -13,6 +13,7 @@ let ABANK_PCONSENT_ID = ""
 let SBANK_PCONSENT_ID = ""
 let USERNAME = ""
 let IS_PREMIUM = false
+let SCENARIOS = [];
 
 let ACCOUNTS = {
     "vbank": {total_balance: 0, accounts: {}},

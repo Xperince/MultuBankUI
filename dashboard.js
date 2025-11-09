@@ -300,6 +300,9 @@ async function getPaymentConsent(bankApi, authToken, amount, account, comment) {
 }
 
 async function getAccounts() {
+    ACCOUNTS['sbank']['total_balance'] = 0
+    ACCOUNTS['vbank']['total_balance'] = 0
+    ACCOUNTS['abank']['total_balance'] = 0
     let vaccounts = await doHTTP(VBANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": VBANK_CONSENT_ID }, null, { "client_id": USERNAME })
     let aaccounts = await doHTTP(ABANK + "accounts", { "Authorization": VTOKEN, "X-Requesting-Bank": "team211", "X-Consent-Id": ABANK_CONSENT_ID }, null, { "client_id": USERNAME })
     if (SBANK_CONSENT_ID.search("consent") != -1) {
@@ -341,6 +344,19 @@ async function getAccounts() {
     }
 }
 
+function logout() {
+    localStorage.clear()
+    USERNAME = ""
+    VBANK_CONSENT_ID = ""
+    ABANK_CONSENT_ID = ""
+    SBANK_CONSENT_ID = ""
+    VBANK_PCONSENT_ID = ""
+    ABANK_PCONSENT_ID = ""
+    SBANK_PCONSENT_ID = ""
+    IS_PREMIUM = ""
+    window.location.href = "./index.html"
+}
+
 window.onload = async function () {
     if (localStorage.getItem("uname") == null || localStorage.getItem("password") == null) {
         return window.location.href = "/index.html"
@@ -359,6 +375,11 @@ window.onload = async function () {
     if (IS_PREMIUM == null) {
         if (USERNAME.search("-2") != -1 || USERNAME.search("-10") != -1) IS_PREMIUM = true
         else false
+    } else if (IS_PREMIUM == "0") IS_PREMIUM = false
+    else IS_PREMIUM = true
+    if (IS_PREMIUM) {
+        document.getElementById("premium_button").className = "premium-activated"
+        document.getElementById("premium_button").innerHTML = "Оформлено!"
     }
     let check = await doHTTP(SBANK + "account-consents/" + SBANK_CONSENT_ID, { "Authorization": STOKEN, "X-Requesting-Bank": "team211" }, null, {})
     if ("detail" in check) {
@@ -899,6 +920,7 @@ async function initializeHistoryCharts() {
         if (info.search("Перевод") != -1) info = "Переводы"
         if (info.search("Платеж по кредиту") != -1) info = "Платежи по кредитам"
         if (info.search("Проценты по депозиту") != -1) info = "Проценты по депозиту"
+        if (info.search("Оформление Premium-подписки") != -1) info = "Оформление Premium-подписки"
         if (type == "02" && info.search("Платежи по кредитам") == -1) {
             if (info in incomes) incomes[info] += parseFloat(elem.amount.amount)
             else incomes[info] = parseFloat(elem.amount.amount)
@@ -907,7 +929,7 @@ async function initializeHistoryCharts() {
             else expenses[info] = parseFloat(elem.amount.amount)
         }
     })
-    // Данные для примера (можно заменить на реальные данные из API)
+
     const incomeData = {
         labels: Object.keys(incomes),
         values: Object.values(incomes),
@@ -1132,11 +1154,11 @@ async function makeTransaction() {
         await getAccounts()
         renderAccounts();
         await getTransactions();
+        const totalBalance = ACCOUNTS['abank']['total_balance'] + ACCOUNTS['vbank']['total_balance'] + ACCOUNTS['sbank']['total_balance']
+        document.getElementById("totalBalance").textContent = totalBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽'
         return alert("✅ Средства успешно переведены!")
     }
 }
-
-let SCENARIOS = [];
 
 function loadScenarios() {
     const savedScenarios = localStorage.getItem('scenarios');
@@ -1218,3 +1240,72 @@ function renderScenarios() {
 
 window.addScenario = addScenario;
 window.deleteScenario = deleteScenario;
+
+
+async function purchasePremium() {
+    if (IS_PREMIUM) return console.log("already")
+    let defaultAcc = ""
+    Object.values(ACCOUNTS).forEach((stat, i) => {
+        Object.values(stat['accounts']).forEach((acc, j) => {
+            if (acc['balance'] >= 300) {
+                defaultAcc = acc['accId']
+                return
+            }
+        })
+    })
+    if (defaultAcc == "") {
+        return alert("Ни на одном из ваших счетов недостаточно средств для оформления подписки")
+    }
+    defaultAcc = prompt("Выберите счет для списывания средств", defaultAcc)
+    let bank = ""
+    let authToken = ""
+    Object.keys(ACCOUNTS).forEach((b, i) => {
+        Object.values(ACCOUNTS[b]['accounts']).forEach((acc, j) => {
+            if (acc['accId'] == defaultAcc) {
+                bank = {"vbank": VBANK, "abank": ABANK, "sbank": SBANK}[b]
+                authToken = {"vbank": VTOKEN, "abank": ATOKEN, "sbank": STOKEN}[b]
+                return
+            }
+        })
+    })
+    if (bank == "" || authToken == "") return alert("Данный счет не найден")
+    let data = {
+        "data": {
+            "initiation": {
+                "instructedAmount": {
+                    "amount": "300.00",
+                    "currency": "RUB"
+                },
+                "debtorAccount": {
+                    "schemeName": "RU.CBR.PAN",
+                    "identification": defaultAcc
+                },
+                "creditorAccount": {
+                    "schemeName": "RU.CBR.PAN",
+                    "identification": "408023ef6828cb7401"
+                },
+                "comment": "Оформление Premium-подписки"
+            }
+        }
+    }
+    let consent = await getPaymentConsent(bank, authToken, "300.00", "408023ef6828cb7401", "Оформление Premium-подписки")
+    consent = consent['consent_id']
+    console.log("consent %s", consent)
+    let payment = await doHTTP(bank + "payments", { "Authorization": authToken, "X-Requesting-Bank": "team211", "X-Payment-Consent-Id": consent }, data, { "client_id": USERNAME })
+    console.log(payment)
+    if ("detail" in payment) {
+        if (payment['detail'] == "Insufficient funds") return alert("Недостаточно средств для оформления подписки")
+    }
+    if (payment["data"]["status"] == "AcceptedSettlementCompleted") {
+        IS_PREMIUM = "1"
+        localStorage.setItem("premium", IS_PREMIUM)
+        await getAccounts()
+        renderAccounts();
+        await getTransactions();
+        const totalBalance = ACCOUNTS['abank']['total_balance'] + ACCOUNTS['vbank']['total_balance'] + ACCOUNTS['sbank']['total_balance']
+        document.getElementById("totalBalance").textContent = totalBalance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₽'
+        document.getElementById("premium_button").className = "premium-activated"
+        document.getElementById("premium_button").innerHTML = "Оформлено!"
+        return alert("Подписка успешно оформлена!")
+    }
+}
